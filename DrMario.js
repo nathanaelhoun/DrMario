@@ -41,7 +41,7 @@ const VIRUS = 1;
 const CAPSULE = 2;
 const BOTTLE_HEIGHT = 16;
 const BOTTLE_WIDTH = 8;
-const REFRESH_SPEED = 1000;
+const REFRESH_SPEED = 100000;
 
 // Medicine
 const TOP = 0;
@@ -406,41 +406,139 @@ function moveMedicineRight(){
  */
 function rotateMedicine(){
     var isMoveAllowed = true;
-    var newdirection = (medicine.direction+1)%4;
+    var newdirection = (medicine.direction-1);
+    if(newdirection<0){
+        newdirection=3;
+    }
     
+    var newX = medicine.x;
+    var newY = medicine.y;
     switch(newdirection){
         case RIGHT:
-            if(medicine.x>=7){
-                isMoveAllowed = false;
-            } else if(ground[medicine.y][medicine.x+1].type !=0){
-                isMoveAllowed = false;
+            newY += 1;
+            if(medicine.x >=7){
+                newX -= 1;
+            } else if(ground[medicine.y+1][medicine.x+1].type !=0){
+                if(ground[medicine.y][medicine.x-1].type ==0){
+                    newX -=1;
+                } else {
+                    isMoveAllowed = false;
+                }
             }
         break;
 
         case BOTTOM:
-            if(ground[medicine.y+1][medicine.x].type !=0){
-                isMoveAllowed = false;
+            newX -= 1;
+            newY -= 1;
+            if(ground[medicine.y-1][medicine.x-1].type !=0){
+                if(ground[medicine.y+1][medicine.x].type == 0){
+                    newY +=1;
+                } else {
+                    isMoveAllowed = false;
+                }
             }
         break;
 
         case LEFT:
-            if(medicine.x<=0){
-                isMoveAllowed = false;
-            } else if(ground[medicine.y][medicine.x-1].type !=0){
-                isMoveAllowed = false;
+            newX += 1 ;
+            if(medicine.x>=7){
+                newX -= 1;
+                if(ground[medicine.y][medicine.x-1].type !=0){
+                    isMoveAllowed = false;
+                }
+            } else if(ground[medicine.y][medicine.x+1].type !=0){
+                if(ground[medicine.y][medicine.x-1].type == 0){
+                    newX -= 1;
+                } else {
+                    isMoveAllowed = false;
+                }
             }
         break;
 
         case TOP:
             if(ground[medicine.y-1][medicine.x].type !=0){
-                isMoveAllowed = false;
+                if(ground[medicine.y+1][medicine.x].type == 0){
+                    newY +=1;
+                } else {
+                    isMoveAllowed = false;
+                }
             }
         break;
     }
 
     if(isMoveAllowed){
         medicine.direction = newdirection;
+        medicine.x = newX;
+        medicine.y = newY;
     }
+}
+
+
+/**
+ * Detect 4-wide alignement of virus and capsules with the same color and destroy them. 
+ * @param {*} ground the ground in an 2-dim array 
+ */
+function detectColorMatching(matrice){
+    //vertical
+    var isVerticalMatchingFound;
+    do{    
+        isVerticalMatchingFound = false;
+        var i=15;
+        while(i>=3 && !isVerticalMatchingFound){
+            
+            var j=0;
+            while(j<8 && !isVerticalMatchingFound){
+                
+                if(ground[i][j].type !=0){
+                    if(matrice[i][j].color == matrice[i-1][j].color 
+                    && matrice[i][j].color ==matrice[i-2][j].color
+                    && matrice[i][j].color ==matrice[i-3][j].color){
+                        isVerticalMatchingFound = true;
+                        var y=i;
+                        while(matrice[y][j].color == matrice[y-1][j].color){
+                            matrice[y][j]=JSON.parse(JSON.stringify(EMPTY_BOX));
+                            y--;
+                        }
+                        matrice[y][j]=JSON.parse(JSON.stringify(EMPTY_BOX));
+                    }
+                }
+                j++;
+            }
+            i--;
+        }
+    } while(isVerticalMatchingFound);
+
+
+    //Horizontal
+    var isHorizontalMatchingFound;
+    do{
+        isHorizontalMatchingFound = false;
+        var i=15;
+        while(i>=0 && !isHorizontalMatchingFound){
+            
+            var j=0;
+            while(j<5 && !isHorizontalMatchingFound){
+                
+                if(ground[i][j].type !=0){
+                    if(matrice[i][j].color == matrice[i][j+1].color 
+                    && matrice[i][j].color ==matrice[i][j+2].color
+                    && matrice[i][j].color ==matrice[i][j+3].color){
+                        isHorizontalMatchingFound = true;
+                        var x=j;
+                        while(matrice[i][x].color == matrice[i][x+1].color){
+                            matrice[i][x]=JSON.parse(JSON.stringify(EMPTY_BOX));
+                            x++;
+                        }
+                        matrice[i][x]=JSON.parse(JSON.stringify(EMPTY_BOX));
+                    }
+                }
+                j++;
+            }
+            i--;
+        }
+    }while(isHorizontalMatchingFound);
+
+    return(matrice);
 }
 
 // ##########################################################################################
@@ -511,19 +609,19 @@ function update() {
     
     if(!isMedicineFalling){
         ground = transferMedicineToGround(ground,medicine);
-        
+        ground = detectColorMatching(ground);
+
         if(isDefeat()){
             defeat = true;
         } else {
             medicine = createMedicine(medicine);
         }
     } else 
-    
-    if(Date.now() - lastRefresh > REFRESH_SPEED){
-        medicine = medicineFalling(medicine);
-        lastRefresh = Date.now();
+        if(Date.now() - lastRefresh > REFRESH_SPEED){
+            medicine = medicineFalling(medicine);
+            lastRefresh = Date.now();
     }
-      
+    
     if(isVictory()){
         victory = true;
     }
