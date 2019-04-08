@@ -14,6 +14,7 @@ var isOnFocus = true;
 var isOnPause = false;
 
 
+var gravityRecheck = false;
 
 var ground = [];
 
@@ -41,7 +42,7 @@ const VIRUS = 1;
 const CAPSULE = 2;
 const BOTTLE_HEIGHT = 16;
 const BOTTLE_WIDTH = 8;
-const REFRESH_SPEED = 100000;
+const REFRESH_SPEED = 1000;
 
 // Medicine
 const TOP = 0;
@@ -49,11 +50,11 @@ const RIGHT = 1;
 const BOTTOM = 2;
 const LEFT = 3;
 var medicine = {
-    x: 0,
-    y: 0,
+    x: -1,
+    y: -1,
     direction: RIGHT,
-    color1 : "grey",
-    color2 : "grey"
+    color1 : "green",
+    color2 : "green"
 };
 
 // ##########################################################################################
@@ -239,6 +240,7 @@ function medicineFalling(med){
  * @return the updated matrice
  */
 function transferMedicineToGround(matrice,med){
+    if(med.x != -1){
         matrice[med.y][med.x].type = CAPSULE;
         matrice[med.y][med.x].color = med.color1;
 
@@ -267,14 +269,15 @@ function transferMedicineToGround(matrice,med){
         matrice[y2][x2].type = CAPSULE;
         matrice[y2][x2].color = med.color2;
         
-        var medicine = {
-            x: 0,
-            y: 0,
+        medicine = {
+            x: -1,
+            y: -1,
             direction: RIGHT,
-            color1 : "grey",
-            color2 : "grey"
+            color1 : "green",
+            color2 : "green"
         };        
-
+        gravityRecheck = true;
+    }
     return(matrice)
 }
 
@@ -284,7 +287,7 @@ function transferMedicineToGround(matrice,med){
  */
 function moveMedicineDown(){
     var isMoveAllowed = true;
-    if(medicine.y >= 15){
+    if(medicine.y >= 15 || medicine.x ==-1){
         isMoveAllowed = false;
     } else {
         if(ground[medicine.y+1][medicine.x].type != 0){
@@ -367,7 +370,7 @@ function moveMedicineLeft(){
 function moveMedicineRight(){
     var isMoveAllowed = true;
     
-    if(medicine.x>=7){
+    if(medicine.x>=7 || medicine.x == -1){
         isMoveAllowed = false;
     } else if(ground[medicine.y][medicine.x+1].type !=0){
         isMoveAllowed = false;
@@ -405,78 +408,81 @@ function moveMedicineRight(){
  * Check if we can rotate the medicine (and do if it is possible)
  */
 function rotateMedicine(){
-    var isMoveAllowed = true;
-    var newdirection = (medicine.direction-1);
-    if(newdirection<0){
-        newdirection=3;
-    }
+    if(medicine.x != -1){
     
-    var newX = medicine.x;
-    var newY = medicine.y;
-    switch(newdirection){
-        case RIGHT:
-            newY += 1;
-            if(medicine.x >=7){
-                newX -= 1;
-            } else if(ground[medicine.y+1][medicine.x+1].type !=0){
-                if(ground[medicine.y][medicine.x-1].type ==0){
-                    newX -=1;
-                } else {
-                    isMoveAllowed = false;
-                }
-            }
-        break;
+        var isMoveAllowed = true;
+        var newdirection = (medicine.direction-1);
+        if(newdirection<0){
+            newdirection=3;
+        }
 
-        case BOTTOM:
-            newX -= 1;
-            newY -= 1;
-            if(ground[medicine.y-1][medicine.x-1].type !=0){
-                if(ground[medicine.y+1][medicine.x].type == 0){
-                    newY +=1;
-                } else {
-                    isMoveAllowed = false;
-                }
-            }
-        break;
-
-        case LEFT:
-            newX += 1 ;
-            if(medicine.x>=7){
-                newX -= 1;
-                if(ground[medicine.y][medicine.x-1].type !=0){
-                    isMoveAllowed = false;
-                }
-            } else if(ground[medicine.y][medicine.x+1].type !=0){
-                if(ground[medicine.y][medicine.x-1].type == 0){
+        var newX = medicine.x;
+        var newY = medicine.y;
+        switch(newdirection){
+            case RIGHT:
+                newY += 1;
+                if(medicine.x >=7){
                     newX -= 1;
-                } else {
-                    isMoveAllowed = false;
+                } else if(ground[medicine.y+1][medicine.x+1].type !=0){
+                    if(ground[medicine.y][medicine.x-1].type ==0){
+                        newX -=1;
+                    } else {
+                        isMoveAllowed = false;
+                    }
                 }
-            }
-        break;
+            break;
 
-        case TOP:
-            if(ground[medicine.y-1][medicine.x].type !=0){
-                if(ground[medicine.y+1][medicine.x].type == 0){
-                    newY +=1;
-                } else {
-                    isMoveAllowed = false;
+            case BOTTOM:
+                newX -= 1;
+                newY -= 1;
+                if(ground[medicine.y-1][medicine.x-1].type !=0){
+                    if(ground[medicine.y+1][medicine.x].type == 0){
+                        newY +=1;
+                    } else {
+                        isMoveAllowed = false;
+                    }
                 }
-            }
-        break;
-    }
+            break;
 
-    if(isMoveAllowed){
-        medicine.direction = newdirection;
-        medicine.x = newX;
-        medicine.y = newY;
+            case LEFT:
+                newX += 1 ;
+                if(medicine.x>=7){
+                    newX -= 1;
+                    if(ground[medicine.y][medicine.x-1].type !=0){
+                        isMoveAllowed = false;
+                    }
+                } else if(ground[medicine.y][medicine.x+1].type !=0){
+                    if(ground[medicine.y][medicine.x-1].type == 0){
+                        newX -= 1;
+                    } else {
+                        isMoveAllowed = false;
+                    }
+                }
+            break;
+
+            case TOP:
+                if(ground[medicine.y-1][medicine.x].type !=0){
+                    if(ground[medicine.y+1][medicine.x].type == 0){
+                        newY +=1;
+                    } else {
+                        isMoveAllowed = false;
+                    }
+                }
+            break;
+        }
+
+        if(isMoveAllowed){
+            medicine.direction = newdirection;
+            medicine.x = newX;
+            medicine.y = newY;
+        }
     }
 }
 
 
 /**
  * Detect 4-wide alignement of virus and capsules with the same color and destroy them. 
- * @param {*} ground the ground in an 2-dim array 
+ * @param {*} matrice the ground in an 2-dim array 
  */
 function detectColorMatching(matrice){
     //vertical
@@ -500,6 +506,7 @@ function detectColorMatching(matrice){
                             y--;
                         }
                         matrice[y][j]=JSON.parse(JSON.stringify(EMPTY_BOX));
+                        gravityRecheck = true;
                     }
                 }
                 j++;
@@ -530,6 +537,7 @@ function detectColorMatching(matrice){
                             x++;
                         }
                         matrice[i][x]=JSON.parse(JSON.stringify(EMPTY_BOX));
+                        gravityRecheck = true;
                     }
                 }
                 j++;
@@ -537,6 +545,34 @@ function detectColorMatching(matrice){
             i--;
         }
     }while(isHorizontalMatchingFound);
+
+        
+    return(matrice);
+}
+
+
+/**
+ * Make the capsules fall if there is nothing under them
+ * @param {*} matrice the ground
+ * @return the updated ground
+ */
+function capsuleGravity(matrice){
+    gravityRecheck = false;
+    for(var i=14 ; i>=0 ; i--){
+        for(var j = 0 ; j<8 ; j++){ 
+            if(matrice[i][j].type === CAPSULE){
+                if( i+1 < 16 && matrice[i+1][j].type == 0){
+            
+                    gravityRecheck = true;
+                    
+                    matrice[i+1][j].color = matrice[i][j].color;
+                    matrice[i+1][j].type = matrice[i][j].type;
+                    
+                    matrice[i][j] = JSON.parse(JSON.stringify(EMPTY_BOX));
+                }
+            }
+        }
+    }
 
     return(matrice);
 }
@@ -607,24 +643,50 @@ function gameLoop(){
 */
 function update() {
     
+    // If we are not in the fall of the medicine
     if(!isMedicineFalling){
-        ground = transferMedicineToGround(ground,medicine);
-        ground = detectColorMatching(ground);
 
-        if(isDefeat()){
-            defeat = true;
+        //
+        ground = transferMedicineToGround(ground,medicine);
+        
+        //If capsules are still falling
+        if(gravityRecheck){
+            
+            //Let an delta = REFRESH_SPEED divided by 2 between two frames
+            if(Date.now() - lastRefresh > REFRESH_SPEED/2){
+                ground = capsuleGravity(ground);
+                lastRefresh = Date.now();
+            }
+
+        //If capsules are not falling
         } else {
-            medicine = createMedicine(medicine);
+            
+            //
+            ground = detectColorMatching(ground);
+
+            // Defeat
+            if(isDefeat()){
+                defeat = true;
+
+            // Launch a new medicine
+            } else if(!gravityRecheck) {
+                medicine = createMedicine(medicine);
+            }
         }
-    } else 
+    
+    //Falling of the medicine
+    } else {
         if(Date.now() - lastRefresh > REFRESH_SPEED){
             medicine = medicineFalling(medicine);
             lastRefresh = Date.now();
+        }
     }
     
+    //Victory ?
     if(isVictory()){
         victory = true;
     }
+
 }
 
 /** 
@@ -701,28 +763,29 @@ function render(){
     }
 
     // Drawing the falling medicine
-    context.fillStyle = medicine.color1;
-    context.fillRect(202 + BOX_WIDTH*medicine.x, 142+BOX_HEIGHT*medicine.y, BOX_HEIGHT-4,BOX_WIDTH-4);
-
-    context.fillStyle = medicine.color2;
-    switch(medicine.direction){
-        case LEFT:
-            context.fillRect(202 + BOX_WIDTH*(medicine.x-1),  142+BOX_HEIGHT*medicine.y, BOX_HEIGHT-4,BOX_WIDTH-4);
-        break;
-
-        case RIGHT:
-            context.fillRect(202 + BOX_WIDTH*(medicine.x+1),  142+BOX_HEIGHT*medicine.y, BOX_HEIGHT-4,BOX_WIDTH-4);
-        break;
-
-        case BOTTOM:
-            context.fillRect(202 + BOX_WIDTH*medicine.x,  142+BOX_HEIGHT*(medicine.y+1), BOX_HEIGHT-4,BOX_WIDTH-4);
-        break;
-
-        case TOP:
-            context.fillRect(202 + BOX_WIDTH*medicine.x,  142+BOX_HEIGHT*(medicine.y-1), BOX_HEIGHT-4,BOX_WIDTH-4);
-        break;
+    if(medicine.x != -1){
+        context.fillStyle = medicine.color1;
+        context.fillRect(202 + BOX_WIDTH*medicine.x, 142+BOX_HEIGHT*medicine.y, BOX_HEIGHT-4,BOX_WIDTH-4);
+    
+        context.fillStyle = medicine.color2;
+        switch(medicine.direction){
+            case LEFT:
+                context.fillRect(202 + BOX_WIDTH*(medicine.x-1),  142+BOX_HEIGHT*medicine.y, BOX_HEIGHT-4,BOX_WIDTH-4);
+            break;
+    
+            case RIGHT:
+                context.fillRect(202 + BOX_WIDTH*(medicine.x+1),  142+BOX_HEIGHT*medicine.y, BOX_HEIGHT-4,BOX_WIDTH-4);
+            break;
+    
+            case BOTTOM:
+                context.fillRect(202 + BOX_WIDTH*medicine.x,  142+BOX_HEIGHT*(medicine.y+1), BOX_HEIGHT-4,BOX_WIDTH-4);
+            break;
+    
+            case TOP:
+                context.fillRect(202 + BOX_WIDTH*medicine.x,  142+BOX_HEIGHT*(medicine.y-1), BOX_HEIGHT-4,BOX_WIDTH-4);
+            break;
+        }    
     }
-
 }
 
 
@@ -730,7 +793,8 @@ function render(){
 *  Key down event
 */
 captureKeyboardPress = function(event) {
-	switch(event.keyCode){
+    
+    switch(event.keyCode){
         // 'P' means pause or unpause
         case 80:
             isOnPause = !isOnPause;
