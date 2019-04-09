@@ -23,7 +23,8 @@ var lastRefresh = 0;
 
 const EMPTY_BOX = {
     type: 0,
-    color: 0
+    color: 0,
+    attached:0,
 }
 
 var numLevel = 1;
@@ -40,6 +41,7 @@ const BOX_WIDTH = 25;
 const BOX_HEIGHT = BOX_WIDTH;
 const VIRUS = 1;
 const CAPSULE = 2;
+const FALLING_CAPSULE = 3;
 const BOTTLE_HEIGHT = 16;
 const BOTTLE_WIDTH = 8;
 const REFRESH_SPEED = 1000;
@@ -243,31 +245,37 @@ function transferMedicineToGround(matrice,med){
     if(med.x != -1){
         matrice[med.y][med.x].type = CAPSULE;
         matrice[med.y][med.x].color = med.color1;
+        matrice[med.y][med.x].attached = med.direction;
 
-        var x2, y2;
+        var x2, y2, direction2;
         switch(med.direction){
             case RIGHT:
                 x2 = med.x + 1;
                 y2 = med.y;
+                direction2 = LEFT;
             break;
 
             case BOTTOM:
                 x2 = med.x ;
                 y2 = med.y + 1 ;
+                direction2 = TOP;
             break;
 
             case LEFT:
                 x2 = med.x - 1;
                 y2 = med.y;
+                direction2 = RIGHT;
             break;
 
             case TOP:
                 x2 = med.x;
                 y2 = med.y - 1;
+                direction2 = BOTTOM;
             break;
         }
         matrice[y2][x2].type = CAPSULE;
         matrice[y2][x2].color = med.color2;
+        matrice[y2][x2].attached = direction2;
         
         medicine = {
             x: -1,
@@ -502,8 +510,42 @@ function detectColorMatching(matrice){
                         isVerticalMatchingFound = true;
                         var y=i;
                         while(matrice[y][j].color == matrice[y-1][j].color){
+                            switch(matrice[y][j].attached){
+                                case RIGHT:
+                                    matrice[y][j+1].attached = -1;
+                                break;
+    
+                                case TOP:
+                                    matrice[y-1][j].attached = -1;
+                                break;
+                                
+                                case LEFT:  
+                                    matrice[y][j-1].attached = -1;
+                                break;
+    
+                                case BOTTOM:
+                                    matrice[y+1][j].attached = -1;
+                                break;
+                            }
                             matrice[y][j]=JSON.parse(JSON.stringify(EMPTY_BOX));
                             y--;
+                        }
+                        switch(matrice[y][j].attached){
+                            case RIGHT:
+                                matrice[y][j+1].attached = -1;
+                            break;
+
+                            case TOP:
+                                matrice[y-1][j].attached = -1;
+                            break;
+                            
+                            case LEFT:  
+                                matrice[y][j-1].attached = -1;
+                            break;
+
+                            case BOTTOM:
+                                matrice[y+1][j].attached = -1;
+                            break;
                         }
                         matrice[y][j]=JSON.parse(JSON.stringify(EMPTY_BOX));
                         gravityRecheck = true;
@@ -533,8 +575,43 @@ function detectColorMatching(matrice){
                         isHorizontalMatchingFound = true;
                         var x=j;
                         while(matrice[i][x].color == matrice[i][x+1].color){
+                            switch(matrice[i][x].attached){
+                                case RIGHT:
+                                    matrice[i][x+1].attached = -1;
+                                break;
+    
+                                case TOP:
+                                    matrice[i-1][x].attached = -1;
+                                break;
+                                
+                                case LEFT:  
+                                    matrice[i][x-1].attached = -1;
+                                break;
+    
+                                case BOTTOM:
+                                    matrice[i+1][x].attached = -1;
+                                break;
+                            }
                             matrice[i][x]=JSON.parse(JSON.stringify(EMPTY_BOX));
                             x++;
+                        }
+
+                        switch(matrice[i][x].attached){
+                            case RIGHT:
+                                matrice[i][x+1].attached = -1;
+                            break;
+
+                            case TOP:
+                                matrice[i-1][x].attached = -1;
+                            break;
+                            
+                            case LEFT:  
+                                matrice[i][x-1].attached = -1;
+                            break;
+
+                            case BOTTOM:
+                                matrice[i+1][x].attached = -1;
+                            break;
                         }
                         matrice[i][x]=JSON.parse(JSON.stringify(EMPTY_BOX));
                         gravityRecheck = true;
@@ -558,18 +635,43 @@ function detectColorMatching(matrice){
  */
 function capsuleGravity(matrice){
     gravityRecheck = false;
+    //Detect 
     for(var i=14 ; i>=0 ; i--){
         for(var j = 0 ; j<8 ; j++){ 
             if(matrice[i][j].type === CAPSULE){
-                if( i+1 < 16 && matrice[i+1][j].type == 0){
-            
-                    gravityRecheck = true;
-                    
-                    matrice[i+1][j].color = matrice[i][j].color;
-                    matrice[i+1][j].type = matrice[i][j].type;
-                    
-                    matrice[i][j] = JSON.parse(JSON.stringify(EMPTY_BOX));
+                if( i+1 < 16 && (matrice[i+1][j].type == 0 || matrice[i+1][j].type == FALLING_CAPSULE)){
+                    var fall = true;
+                    switch(matrice[i][j].attached){
+                        case RIGHT:
+                            if(matrice[i+1][j+1].type != 0 && matrice[i+1][j+1].type != FALLING_CAPSULE){
+                                fall = false;
+                            }
+                        break;
+                        
+                        case LEFT:  
+                            if(matrice[i+1][j-1].type != 0 && matrice[i+1][j-1].type != FALLING_CAPSULE){
+                                fall = false;
+                            }
+                        break;
+                    }
+
+                    if(fall){
+                        gravityRecheck = true;
+                        matrice[i][j].type = FALLING_CAPSULE;
+                    }
                 }
+            }
+        }
+    }
+
+    //Make fall
+    for(var i=14 ; i>=0 ; i--){
+        for(var j = 0 ; j<8 ; j++){ 
+            if(matrice[i][j].type === FALLING_CAPSULE){
+                matrice[i+1][j].color = matrice[i][j].color;
+                matrice[i+1][j].type = CAPSULE;
+                matrice[i+1][j].attached = matrice[i][j].attached;
+                matrice[i][j] = JSON.parse(JSON.stringify(EMPTY_BOX));    
             }
         }
     }
@@ -711,8 +813,8 @@ function render(){
             context.fillStyle = "darkblue";
             context.fillRect(200+25*j, 140+25*i, BOX_HEIGHT,BOX_WIDTH);
             
-            var x = 200+BOX_WIDTH*j+2;
-            var y = 140+BOX_HEIGHT*i+2;
+            var x = 202+BOX_WIDTH*j;
+            var y = 142+BOX_HEIGHT*i;
             
             switch(ground[i][j].type){    
                 case 0:
@@ -753,36 +855,199 @@ function render(){
                     context.fillRect(x+19,y+19,1,1)
                 break;
 
-                case CAPSULE:                    
+                case CAPSULE:  
+                case FALLING_CAPSULE:                  
                     context.fillStyle = ground[i][j].color;
                     context.fillRect(x, y, BOX_HEIGHT-4,BOX_WIDTH-4);
+
+                    //Corners
+                    context.fillStyle = "grey";
+                    switch(ground[i][j].attached){
+                        case RIGHT:
+                            context.fillRect(x,y,1,4)
+                            context.fillRect(x+1,y,3,1)
+                            context.fillRect(x+1,y+1,1,1)
+
+                            context.fillRect(x,y+17,1,4)
+                            context.fillRect(x+1,y+20,3,1)
+                            context.fillRect(x+1,y+19,1,1)    
+                        break;
+
+                        case LEFT:
+                            context.fillRect(x+20,y,1,4)
+                            context.fillRect(x+17,y,3,1)
+                            context.fillRect(x+19,y+1,1,1)
+            
+                            context.fillRect(x+20,y+17,1,4)
+                            context.fillRect(x+17,y+20,3,1)
+                            context.fillRect(x+19,y+19,1,1)
+                        break;
+
+                        case BOTTOM:
+                            context.fillRect(x,y,1,4)
+                            context.fillRect(x+1,y,3,1)
+                            context.fillRect(x+1,y+1,1,1)
+                            
+                            context.fillRect(x+20,y,1,4)
+                            context.fillRect(x+17,y,3,1)
+                            context.fillRect(x+19,y+1,1,1)    
+                        break;
+
+                        case TOP:
+                            context.fillRect(x+20,y+17,1,4)
+                            context.fillRect(x+17,y+20,3,1)
+                            context.fillRect(x+19,y+19,1,1)
+
+                            context.fillRect(x,y+17,1,4)
+                            context.fillRect(x+1,y+20,3,1)
+                            context.fillRect(x+1,y+19,1,1)
+                        break;
+                        default:
+                            //Corners
+                            context.fillStyle = "grey";
+                            
+                            context.fillRect(x,y,1,4)
+                            context.fillRect(x+1,y,3,1)
+                            context.fillRect(x+1,y+1,1,1)
+
+                            context.fillRect(x+20,y,1,4)
+                            context.fillRect(x+17,y,3,1)
+                            context.fillRect(x+19,y+1,1,1)
+
+                            
+                            context.fillRect(x,y+17,1,4)
+                            context.fillRect(x+1,y+20,3,1)
+                            context.fillRect(x+1,y+19,1,1)
+                            
+                            context.fillRect(x+20,y+17,1,4)
+                            context.fillRect(x+17,y+20,3,1)
+                            context.fillRect(x+19,y+19,1,1)
+                        break;
+                    }
                 break;
             }
-            
         }
     }
 
     // Drawing the falling medicine
     if(medicine.x != -1){
         context.fillStyle = medicine.color1;
-        context.fillRect(202 + BOX_WIDTH*medicine.x, 142+BOX_HEIGHT*medicine.y, BOX_HEIGHT-4,BOX_WIDTH-4);
-    
+        
+        var x = 202 + BOX_WIDTH*medicine.x;
+        var y = 142+BOX_HEIGHT*medicine.y;
+        context.fillRect(x, y, BOX_HEIGHT-4,BOX_WIDTH-4);
+         
+        //Corners
+        context.fillStyle = "grey";
+        switch(medicine.direction){
+            case RIGHT:
+                context.fillRect(x,y,1,4)
+                context.fillRect(x+1,y,3,1)
+                context.fillRect(x+1,y+1,1,1)
+
+                context.fillRect(x,y+17,1,4)
+                context.fillRect(x+1,y+20,3,1)
+                context.fillRect(x+1,y+19,1,1)    
+            break;
+
+            case LEFT:
+                context.fillRect(x+20,y,1,4)
+                context.fillRect(x+17,y,3,1)
+                context.fillRect(x+19,y+1,1,1)
+
+                context.fillRect(x+20,y+17,1,4)
+                context.fillRect(x+17,y+20,3,1)
+                context.fillRect(x+19,y+19,1,1)
+            break;
+
+            case BOTTOM:
+                context.fillRect(x,y,1,4)
+                context.fillRect(x+1,y,3,1)
+                context.fillRect(x+1,y+1,1,1)
+                
+                context.fillRect(x+20,y,1,4)
+                context.fillRect(x+17,y,3,1)
+                context.fillRect(x+19,y+1,1,1)    
+            break;
+
+            case TOP:
+                context.fillRect(x+20,y+17,1,4)
+                context.fillRect(x+17,y+20,3,1)
+                context.fillRect(x+19,y+19,1,1)
+
+                context.fillRect(x,y+17,1,4)
+                context.fillRect(x+1,y+20,3,1)
+                context.fillRect(x+1,y+19,1,1)
+            break;
+        }
+
+
+        
         context.fillStyle = medicine.color2;
         switch(medicine.direction){
             case LEFT:
-                context.fillRect(202 + BOX_WIDTH*(medicine.x-1),  142+BOX_HEIGHT*medicine.y, BOX_HEIGHT-4,BOX_WIDTH-4);
+                x = 202 + BOX_WIDTH*(medicine.x-1);
+                y = 142 + BOX_HEIGHT*medicine.y;
+            
+                context.fillRect(x, y, BOX_HEIGHT-4,BOX_WIDTH-4);
+                
+                context.fillStyle = "grey";
+                context.fillRect(x,y,1,4)
+                context.fillRect(x+1,y,3,1)
+                context.fillRect(x+1,y+1,1,1)
+
+                context.fillRect(x,y+17,1,4)
+                context.fillRect(x+1,y+20,3,1)
+                context.fillRect(x+1,y+19,1,1)  
             break;
     
             case RIGHT:
-                context.fillRect(202 + BOX_WIDTH*(medicine.x+1),  142+BOX_HEIGHT*medicine.y, BOX_HEIGHT-4,BOX_WIDTH-4);
+                x = 202 + BOX_WIDTH*(medicine.x+1);
+                y = 142+BOX_HEIGHT*medicine.y;
+                
+                context.fillRect(x, y, BOX_HEIGHT-4,BOX_WIDTH-4);
+                
+                context.fillStyle = "grey";
+                context.fillRect(x+20,y,1,4)    
+                context.fillRect(x+17,y,3,1)
+                context.fillRect(x+19,y+1,1,1)
+
+                context.fillRect(x+20,y+17,1,4)
+                context.fillRect(x+17,y+20,3,1)
+                context.fillRect(x+19,y+19,1,1)
+
             break;
     
-            case BOTTOM:
-                context.fillRect(202 + BOX_WIDTH*medicine.x,  142+BOX_HEIGHT*(medicine.y+1), BOX_HEIGHT-4,BOX_WIDTH-4);
+            case BOTTOM:                
+                x = 202 + BOX_WIDTH*medicine.x;
+                y = 142+BOX_HEIGHT*(medicine.y+1);
+            
+                context.fillRect(x, y, BOX_HEIGHT-4,BOX_WIDTH-4);
+                
+                context.fillStyle = "grey";
+                context.fillRect(x+20,y+17,1,4)
+                context.fillRect(x+17,y+20,3,1)
+                context.fillRect(x+19,y+19,1,1)
+
+                context.fillRect(x,y+17,1,4)
+                context.fillRect(x+1,y+20,3,1)
+                context.fillRect(x+1,y+19,1,1)
             break;
     
-            case TOP:
-                context.fillRect(202 + BOX_WIDTH*medicine.x,  142+BOX_HEIGHT*(medicine.y-1), BOX_HEIGHT-4,BOX_WIDTH-4);
+            case TOP:    
+                x = 202 + BOX_WIDTH*medicine.x;
+                y = 142+BOX_HEIGHT*(medicine.y-1);
+            
+                context.fillRect(x, y, BOX_HEIGHT-4,BOX_WIDTH-4);
+                
+                context.fillStyle = "grey";
+                context.fillRect(x,y,1,4)
+                context.fillRect(x+1,y,3,1)
+                context.fillRect(x+1,y+1,1,1)
+                
+                context.fillRect(x+20,y,1,4)
+                context.fillRect(x+17,y,3,1)
+                context.fillRect(x+19,y+1,1,1)                  
             break;
         }    
     }
