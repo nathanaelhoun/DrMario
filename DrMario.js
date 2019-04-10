@@ -10,47 +10,54 @@
 // ###################################### Variables #########################################
 // ##########################################################################################
 
+//General variables
 var isOnFocus = true;
 var isOnPause = false;
 
-
 var gravityRecheck = false;
-
-var ground = [];
-
-var lastUpdate = 0;
-var lastRefresh = 0;
-
-const EMPTY_BOX = {
-    type: 0,
-    color: 0,
-    attached:0,
-}
+var isMedicineFalling = false;
 
 var numLevel = 1;
 var victory = false;
 var defeat = false;
-var isMedicineFalling = false;
+
+//Rendering variables
+var showStartTimer = 0;
+var showStartText = false;
+
+//Ground
+var ground = [];
+
+const EMPTY_BOX = {
+    type: 0,
+    color: 0,
+    attached:0
+};
+
 
 // Coloration variables
 const COLORS = ["blue", "red", "yellow"];
 
-
 // Miscellaneous
 const BOX_WIDTH = 25;
 const BOX_HEIGHT = BOX_WIDTH;
+const BOTTLE_HEIGHT = 16;
+const BOTTLE_WIDTH = 8;
+
 const VIRUS = 1;
 const CAPSULE = 2;
 const FALLING_CAPSULE = 3;
-const BOTTLE_HEIGHT = 16;
-const BOTTLE_WIDTH = 8;
-const REFRESH_SPEED = 1000;
 
-// Medicine
+const REFRESH_SPEED = 1000;
+const GRAVITY_SPEED = 300;
+
+
+// Medicines
 const TOP = 0;
 const RIGHT = 1;
 const BOTTOM = 2;
 const LEFT = 3;
+
 var medicine = {
     x: -1,
     y: -1,
@@ -58,6 +65,16 @@ var medicine = {
     color1 : "green",
     color2 : "green"
 };
+
+var nextMedicine = {
+    x: -1,
+    y: -1,
+    direction: RIGHT,
+    color1 : "green",
+    color2 : "green"
+};
+
+
 
 // ##########################################################################################
 // ###################################### Functions #########################################
@@ -82,7 +99,32 @@ function isDefeat(){
 
 
 /**
- * @return a random number between 1 and 3
+ * When 'enter' key is pressed, replay or go to next level
+ */
+function replayTheGame(){
+    if(victory){
+        numLevel++;
+        victory = false;
+        
+        ground = groundInitialization(ground);
+        ground = randomVirus(ground, 4*numLevel);
+    
+        medicine = createMedicine(medicine);
+        
+    } else if(defeat){
+        defeat = false;
+        //playerScore = 0;
+        //numVirus =
+        ground = groundInitialization(ground);
+        ground = randomVirus(ground, 4*numLevel);
+    
+        medicine = createMedicine(medicine);
+    }
+}
+
+
+/**
+ * @return a random number corresponding to a color in the COLORS array
  */
 function randomColor(){
     return(COLORS[Math.floor(Math.random()*COLORS.length)]);
@@ -126,6 +168,7 @@ function randomVirus(matrice,numberOfVirus){
         if(randomLine>=0 && randomColumn >=0){
             matrice[randomLine][randomColumn].color = randomColor();
             matrice[randomLine][randomColumn].type = VIRUS;
+            matrice[randomLine][randomColumn].attached = -1;
             actualNumberOfVirus++;
         }
     }
@@ -177,6 +220,216 @@ function remainingVirusNumber(matrice){
     return(virusNumber);
 }
 
+
+
+
+/**
+ * Detect 4-wide alignement of virus and capsules with the same color and destroy them. 
+ * @param {*} matrice the ground in an 2-dim array 
+ */
+function detectColorMatching(matrice){
+    //vertical
+    var isVerticalMatchingFound;
+    do{    
+        isVerticalMatchingFound = false;
+        var i=15;
+        while(i>=3 && !isVerticalMatchingFound){
+            
+            var j=0;
+            while(j<8 && !isVerticalMatchingFound){
+                
+                if(ground[i][j].type !=0){
+                    if(matrice[i][j].color == matrice[i-1][j].color 
+                    && matrice[i][j].color == matrice[i-2][j].color
+                    && matrice[i][j].color == matrice[i-3][j].color){
+                        isVerticalMatchingFound = true;
+                        
+                        
+                        //Destroy
+                        var y=i;
+                        do{
+                            //Un-attach the attached part
+                            switch(matrice[y][j].attached){
+                                case RIGHT:
+                                    matrice[y][j+1].attached = -1;
+                                break;
+    
+                                case TOP:
+                                    matrice[y-1][j].attached = -1;
+                                break;
+                                
+                                case LEFT:  
+                                    matrice[y][j-1].attached = -1;
+                                break;
+    
+                                case BOTTOM:
+                                    matrice[y+1][j].attached = -1;
+                                break;
+                            }
+                            //Destroy
+                            matrice[y][j]=JSON.parse(JSON.stringify(EMPTY_BOX));
+                            
+                            y--;
+                        }while(matrice[y][j].color == matrice[y-1][j].color);
+                        
+                        //Last one
+                        //Un-attach the attached part
+                        switch(matrice[y][j].attached){
+                            case RIGHT:
+                                matrice[y][j+1].attached = -1;
+                            break;
+
+                            case TOP:
+                                matrice[y-1][j].attached = -1;
+                            break;
+                            
+                            case LEFT:  
+                                matrice[y][j-1].attached = -1;
+                            break;
+
+                            case BOTTOM:
+                                matrice[y+1][j].attached = -1;
+                            break;
+                        }
+                        //Destroy
+                        matrice[y][j]=JSON.parse(JSON.stringify(EMPTY_BOX));
+
+
+                        gravityRecheck = true;
+                    }
+                }
+                j++;
+            }
+            i--;
+        }
+    } while(isVerticalMatchingFound);
+
+
+    //Horizontal
+    var isHorizontalMatchingFound;
+    do{
+        isHorizontalMatchingFound = false;
+        var i=15;
+        while(i>=0 && !isHorizontalMatchingFound){
+            
+            var j=0;
+            while(j<5 && !isHorizontalMatchingFound){
+                
+                if(ground[i][j].type !=0){
+                    if(matrice[i][j].color == matrice[i][j+1].color 
+                    && matrice[i][j].color ==matrice[i][j+2].color
+                    && matrice[i][j].color ==matrice[i][j+3].color){
+                        isHorizontalMatchingFound = true;
+                        var x=j;
+                        while(matrice[i][x].color == matrice[i][x+1].color){
+                            switch(matrice[i][x].attached){
+                                case RIGHT:
+                                    matrice[i][x+1].attached = -1;
+                                break;
+    
+                                case TOP:
+                                    matrice[i-1][x].attached = -1;
+                                break;
+                                
+                                case LEFT:  
+                                    matrice[i][x-1].attached = -1;
+                                break;
+    
+                                case BOTTOM:
+                                    matrice[i+1][x].attached = -1;
+                                break;
+                            }
+                            matrice[i][x]=JSON.parse(JSON.stringify(EMPTY_BOX));
+                            x++;
+                        }
+
+                        switch(matrice[i][x].attached){
+                            case RIGHT:
+                                matrice[i][x+1].attached = -1;
+                            break;
+
+                            case TOP:
+                                matrice[i-1][x].attached = -1;
+                            break;
+                            
+                            case LEFT:  
+                                matrice[i][x-1].attached = -1;
+                            break;
+
+                            case BOTTOM:
+                                matrice[i+1][x].attached = -1;
+                            break;
+                        }
+                        matrice[i][x]=JSON.parse(JSON.stringify(EMPTY_BOX));
+                        gravityRecheck = true;
+                    }
+                }
+                j++;
+            }
+            i--;
+        }
+    }while(isHorizontalMatchingFound);
+        
+    return(matrice);
+}
+
+
+/**
+ * Make the capsules fall if there is nothing under them
+ * @param {*} matrice the ground
+ * @return the updated ground
+ */
+function capsuleGravity(matrice){
+    gravityRecheck = false;
+    //Detect 
+    for(var i=14 ; i>=0 ; i--){
+        for(var j = 0 ; j<8 ; j++){ 
+            if(matrice[i][j].type === CAPSULE){
+                if( i+1 < 16 && (matrice[i+1][j].type == 0 || matrice[i+1][j].type == FALLING_CAPSULE)){
+                    var fall = true;
+                    switch(matrice[i][j].attached){
+                        case RIGHT:
+                            if(matrice[i+1][j+1].type != 0 && matrice[i+1][j+1].type != FALLING_CAPSULE){
+                                fall = false;
+                            }
+                        break;
+                        
+                        case LEFT:  
+                            if(matrice[i+1][j-1].type != 0 && matrice[i+1][j-1].type != FALLING_CAPSULE){
+                                fall = false;
+                            }
+                        break;
+                    }
+
+                    if(fall){
+                        gravityRecheck = true;
+                        matrice[i][j].type = FALLING_CAPSULE;
+                    }
+                }
+            }
+        }
+    }
+
+    //Make fall
+    for(var i=14 ; i>=0 ; i--){
+        for(var j = 0 ; j<8 ; j++){ 
+            if(matrice[i][j].type === FALLING_CAPSULE){
+                matrice[i+1][j].color = matrice[i][j].color;
+                matrice[i+1][j].type = CAPSULE;
+                matrice[i+1][j].attached = matrice[i][j].attached;
+                matrice[i][j] = JSON.parse(JSON.stringify(EMPTY_BOX));    
+            }
+        }
+    }
+
+    return(matrice);
+}
+
+
+
+
+
+
 /**
  * Create a medicine with random colors
  * @param {*} med the medicine you want to reset
@@ -190,9 +443,29 @@ function createMedicine(med){
         color1 : randomColor(),
         color2 : randomColor()
     }
-    isMedicineFalling = true;
     return(med);
 }
+
+
+/**
+ * Copy the content of oldMed into newMed
+ * @param {*} oldMed the med you want to copy
+ * @param {*} newMed the destination med
+ * @return {*} the new med filled with the content of the old one
+ */
+function copyMedicine(oldMed,newMed){
+    newMed = {
+        x: oldMed.x,
+        y: oldMed.y,
+        direction: oldMed.direction,
+        color1 : oldMed.color1,
+        color2 : oldMed.color2
+    }
+    isMedicineFalling = true;
+    gravityRecheck = false;
+    return(newMed);
+}
+
 
 /**
  * Check if a medicine can fall (modify global var isMedicineFalling) and if yes, make it fall
@@ -234,6 +507,7 @@ function medicineFalling(med){
     }
     return(med);
 }
+
 
 /**
  * Does exactly what you expect & reset the medicine var
@@ -488,196 +762,213 @@ function rotateMedicine(){
 }
 
 
-/**
- * Detect 4-wide alignement of virus and capsules with the same color and destroy them. 
- * @param {*} matrice the ground in an 2-dim array 
- */
-function detectColorMatching(matrice){
-    //vertical
-    var isVerticalMatchingFound;
-    do{    
-        isVerticalMatchingFound = false;
-        var i=15;
-        while(i>=3 && !isVerticalMatchingFound){
-            
-            var j=0;
-            while(j<8 && !isVerticalMatchingFound){
-                
-                if(ground[i][j].type !=0){
-                    if(matrice[i][j].color == matrice[i-1][j].color 
-                    && matrice[i][j].color ==matrice[i-2][j].color
-                    && matrice[i][j].color ==matrice[i-3][j].color){
-                        isVerticalMatchingFound = true;
-                        var y=i;
-                        while(matrice[y][j].color == matrice[y-1][j].color){
-                            switch(matrice[y][j].attached){
-                                case RIGHT:
-                                    matrice[y][j+1].attached = -1;
-                                break;
-    
-                                case TOP:
-                                    matrice[y-1][j].attached = -1;
-                                break;
-                                
-                                case LEFT:  
-                                    matrice[y][j-1].attached = -1;
-                                break;
-    
-                                case BOTTOM:
-                                    matrice[y+1][j].attached = -1;
-                                break;
-                            }
-                            matrice[y][j]=JSON.parse(JSON.stringify(EMPTY_BOX));
-                            y--;
-                        }
-                        switch(matrice[y][j].attached){
-                            case RIGHT:
-                                matrice[y][j+1].attached = -1;
-                            break;
 
-                            case TOP:
-                                matrice[y-1][j].attached = -1;
-                            break;
-                            
-                            case LEFT:  
-                                matrice[y][j-1].attached = -1;
-                            break;
-
-                            case BOTTOM:
-                                matrice[y+1][j].attached = -1;
-                            break;
-                        }
-                        matrice[y][j]=JSON.parse(JSON.stringify(EMPTY_BOX));
-                        gravityRecheck = true;
-                    }
-                }
-                j++;
-            }
-            i--;
-        }
-    } while(isVerticalMatchingFound);
-
-
-    //Horizontal
-    var isHorizontalMatchingFound;
-    do{
-        isHorizontalMatchingFound = false;
-        var i=15;
-        while(i>=0 && !isHorizontalMatchingFound){
-            
-            var j=0;
-            while(j<5 && !isHorizontalMatchingFound){
-                
-                if(ground[i][j].type !=0){
-                    if(matrice[i][j].color == matrice[i][j+1].color 
-                    && matrice[i][j].color ==matrice[i][j+2].color
-                    && matrice[i][j].color ==matrice[i][j+3].color){
-                        isHorizontalMatchingFound = true;
-                        var x=j;
-                        while(matrice[i][x].color == matrice[i][x+1].color){
-                            switch(matrice[i][x].attached){
-                                case RIGHT:
-                                    matrice[i][x+1].attached = -1;
-                                break;
-    
-                                case TOP:
-                                    matrice[i-1][x].attached = -1;
-                                break;
-                                
-                                case LEFT:  
-                                    matrice[i][x-1].attached = -1;
-                                break;
-    
-                                case BOTTOM:
-                                    matrice[i+1][x].attached = -1;
-                                break;
-                            }
-                            matrice[i][x]=JSON.parse(JSON.stringify(EMPTY_BOX));
-                            x++;
-                        }
-
-                        switch(matrice[i][x].attached){
-                            case RIGHT:
-                                matrice[i][x+1].attached = -1;
-                            break;
-
-                            case TOP:
-                                matrice[i-1][x].attached = -1;
-                            break;
-                            
-                            case LEFT:  
-                                matrice[i][x-1].attached = -1;
-                            break;
-
-                            case BOTTOM:
-                                matrice[i+1][x].attached = -1;
-                            break;
-                        }
-                        matrice[i][x]=JSON.parse(JSON.stringify(EMPTY_BOX));
-                        gravityRecheck = true;
-                    }
-                }
-                j++;
-            }
-            i--;
-        }
-    }while(isHorizontalMatchingFound);
-
-        
-    return(matrice);
-}
 
 
 /**
- * Make the capsules fall if there is nothing under them
- * @param {*} matrice the ground
- * @return the updated ground
+ * Colorize the top left corner of a box to make the inside looks like it was rounded
+ * @param {*} x the x coordinate of the box in the canvas
+ * @param {*} y the y coordinate of the box in the canvas
+ * @param {*} color the color of the corner
  */
-function capsuleGravity(matrice){
-    gravityRecheck = false;
-    //Detect 
-    for(var i=14 ; i>=0 ; i--){
-        for(var j = 0 ; j<8 ; j++){ 
-            if(matrice[i][j].type === CAPSULE){
-                if( i+1 < 16 && (matrice[i+1][j].type == 0 || matrice[i+1][j].type == FALLING_CAPSULE)){
-                    var fall = true;
-                    switch(matrice[i][j].attached){
-                        case RIGHT:
-                            if(matrice[i+1][j+1].type != 0 && matrice[i+1][j+1].type != FALLING_CAPSULE){
-                                fall = false;
-                            }
-                        break;
-                        
-                        case LEFT:  
-                            if(matrice[i+1][j-1].type != 0 && matrice[i+1][j-1].type != FALLING_CAPSULE){
-                                fall = false;
-                            }
-                        break;
-                    }
-
-                    if(fall){
-                        gravityRecheck = true;
-                        matrice[i][j].type = FALLING_CAPSULE;
-                    }
-                }
-            }
-        }
-    }
-
-    //Make fall
-    for(var i=14 ; i>=0 ; i--){
-        for(var j = 0 ; j<8 ; j++){ 
-            if(matrice[i][j].type === FALLING_CAPSULE){
-                matrice[i+1][j].color = matrice[i][j].color;
-                matrice[i+1][j].type = CAPSULE;
-                matrice[i+1][j].attached = matrice[i][j].attached;
-                matrice[i][j] = JSON.parse(JSON.stringify(EMPTY_BOX));    
-            }
-        }
-    }
-
-    return(matrice);
+function renderTopLeftCorner(x,y,color){
+    context.fillStyle = color;
+    context.fillRect(x,y,1,4);
+    context.fillRect(x+1,y,3,1);
+    context.fillRect(x+1,y+1,1,1);
 }
+
+/**
+ * Colorize the top right corner of a box to make the inside looks like it was rounded
+ * @param {*} x the x coordinate of the box in the canvas
+ * @param {*} y the y coordinate of the box in the canvas
+ * @param {*} color the color of the corner
+ */
+function renderTopRightCorner(x,y,color){
+    context.fillStyle = color;
+    context.fillRect(x+20,y,1,4);
+    context.fillRect(x+17,y,3,1);
+    context.fillRect(x+19,y+1,1,1);
+}
+
+/**
+ * Colorize the bottom left corner of a box to make the inside looks like it was rounded
+ * @param {*} x the x coordinate of the box in the canvas
+ * @param {*} y the y coordinate of the box in the canvas
+ * @param {*} color the color of the corner
+ */
+function renderBottomLeftCorner(x,y,color){
+    context.fillStyle = color;
+    context.fillRect(x,y+17,1,4)
+    context.fillRect(x+1,y+20,3,1)
+    context.fillRect(x+1,y+19,1,1)
+}
+
+/**
+ * Colorize the bottom right corner of a box to make the inside looks like it was rounded
+ * @param {*} x the x coordinate of the box in the canvas
+ * @param {*} y the y coordinate of the box in the canvas
+ * @param {*} color the color of the corner
+ */
+function renderBottomRightCorner(x,y,color){
+    context.fillStyle = color;
+    context.fillRect(x+20,y+17,1,4);
+    context.fillRect(x+17,y+20,3,1);
+    context.fillRect(x+19,y+19,1,1);
+}
+
+/**
+ * Render a virus
+ * @param {*} x the x coordinate of the virus in the canvas
+ * @param {*} y the y coordinate of the virus in the canvas
+ * @param {*} color the color of the virus
+ */
+function renderVirus(x,y,color){
+    context.fillStyle = color;
+    context.fillRect(x, y, BOX_HEIGHT-4,BOX_WIDTH-4);
+
+    //Don't smile
+    context.fillStyle = "black";
+    context.fillRect(x + 4, y+4,3,5);
+    context.fillRect(x + 14, y+4,3,5);
+    context.fillRect(x + 4, y + 13, 12, 3);
+    context.fillRect(x + 3, y + 15, 3,3);
+    context.fillRect(x + 15, y + 15, 3,3);
+
+    //Corners
+    renderTopLeftCorner(x,y,"grey");                    
+    renderTopRightCorner(x,y,"grey");
+    renderBottomLeftCorner(x,y,"grey");    
+    renderBottomRightCorner(x,y,"grey");
+}
+
+/**
+ * Render the victory screen
+ */
+function renderVictoryScreen(){
+    //Outline
+    context.fillStyle = "black";
+    context.fillRect(210,200,180,200);
+    
+    //Background
+    context.fillStyle = "grey";
+    context.fillRect(215,205,170,190);
+
+    //Text
+    context.font="40px Verdana";
+    context.fillStyle = "black";
+    context.fillText("STAGE", 220,250);
+    context.fillText("CLEAR",250,285);
+    context.fillText("TRY", 230,350);
+    context.fillText("NEXT",270,385); 
+}
+
+/**
+ * Render the defeat screen
+ */
+function renderDefeatScreen(){
+    //Outline
+    context.fillStyle = "black";
+    context.fillRect(210,200,180,200);
+
+    //Background
+    context.fillStyle = "darkgrey";
+    context.fillRect(215,205,170,190);
+    
+    //Text
+    context.font="40px Verdana";
+    context.fillStyle = "black";
+    context.fillText("DEFEAT", 220,250);
+    context.fillText("TRY", 220,350);
+    context.fillText("AGAIN",250,385);
+}
+
+/**
+ * Render "start" with blinking
+ */
+function renderStartText(){
+    if(Date.now() - showStartTimer > 500){
+        showStartText = !showStartText;
+        showStartTimer = Date.now();
+    }
+    if(showStartText){
+        context.font="40px Verdana";
+        context.fillStyle = "white";
+        context.fillText("START", 240,500);
+    }
+}
+
+/**
+ * Render a medicine
+ * @param {*} x the x coordinate of the medicine in the canvas 
+ * @param {*} y the y coordinate of the medicine in the canvas
+ * @param {*} color1 the color of the first capsule
+ * @param {*} color2 the color of the second capsule
+ * @param {*} direction the direction of the medicine
+ */
+function renderMedicine(x,y,color1,color2,direction){
+    //First capsule
+    context.fillStyle = color1;
+    context.fillRect(x, y, BOX_HEIGHT-4,BOX_WIDTH-4);
+    
+    //Corners
+    switch(direction){
+        case RIGHT:
+            renderTopLeftCorner(x,y,"grey");
+            renderBottomLeftCorner(x,y,"grey");
+        break;
+
+        case LEFT:
+            renderBottomRightCorner(x,y,"grey");
+            renderTopRightCorner(x,y,"grey");
+        break;
+
+        case BOTTOM:
+            renderTopLeftCorner(x,y,"grey");
+            renderTopRightCorner(x,y,"grey");
+        break;
+
+        case TOP:
+            renderBottomLeftCorner(x,y,"grey");
+            renderBottomRightCorner(x,y,"grey");
+        break;
+    }
+
+    //Second capsule
+    context.fillStyle = color2;
+    switch(direction){
+        case LEFT:
+            x -= BOX_WIDTH;
+            context.fillRect(x, y, BOX_HEIGHT-4,BOX_WIDTH-4);
+            renderTopLeftCorner(x,y,"grey");
+            renderBottomLeftCorner(x,y,"grey");  
+        break;
+
+        case RIGHT:
+            x += BOX_WIDTH;
+            context.fillRect(x, y, BOX_HEIGHT-4,BOX_WIDTH-4);
+            renderBottomRightCorner(x,y,"grey");
+            renderTopRightCorner(x,y,"grey");
+        break;
+
+        case BOTTOM:                
+            y += BOX_HEIGHT;
+            context.fillRect(x, y, BOX_HEIGHT-4,BOX_WIDTH-4);
+            renderBottomLeftCorner(x,y,"grey");
+            renderBottomRightCorner(x,y,"grey");
+        break;
+
+        case TOP:    
+            y -= BOX_HEIGHT;
+            context.fillRect(x, y, BOX_HEIGHT-4,BOX_WIDTH-4);
+            renderTopLeftCorner(x,y,"grey");
+            renderTopRightCorner(x,y,"grey");               
+        break;
+    }
+}
+
+
+
 
 // ##########################################################################################
 // ######################################## Game ############################################
@@ -707,13 +998,15 @@ function init(){
     ground = randomVirus(ground, 4*numLevel);
     
     
+    //Creation of the first medicine
+    nextMedicine = createMedicine(medicine);
     medicine = createMedicine(medicine);
+    isMedicineFalling = true;    
     
-
-
     // 2 listeners on the keyboard (keyup and keydown)
 	document.addEventListener("keydown", captureKeyboardPress)
 	document.addEventListener("keyup", captureKeyboardReleased)
+
 
     // Go my little game loop, and never stop
     lastUpdate = Date.now();
@@ -727,6 +1020,7 @@ function init(){
 function gameLoop(){
     if(!isOnFocus || isOnPause){
         document.title = "DrMario - en pause";
+        render();
     } else {
         document.title = "DrMario";
 
@@ -735,7 +1029,6 @@ function gameLoop(){
         }
         // Draw the game
         render();
-        
     }
     requestAnimationFrame(gameLoop);
 }
@@ -755,7 +1048,7 @@ function update() {
         if(gravityRecheck){
             
             //Let an delta = REFRESH_SPEED divided by 2 between two frames
-            if(Date.now() - lastRefresh > REFRESH_SPEED/2){
+            if(Date.now() - lastRefresh > GRAVITY_SPEED){
                 ground = capsuleGravity(ground);
                 lastRefresh = Date.now();
             }
@@ -772,7 +1065,8 @@ function update() {
 
             // Launch a new medicine
             } else if(!gravityRecheck) {
-                medicine = createMedicine(medicine);
+                medicine = copyMedicine(nextMedicine,medicine);
+                nextMedicine = createMedicine(nextMedicine);
             }
         }
     
@@ -788,7 +1082,6 @@ function update() {
     if(isVictory()){
         victory = true;
     }
-
 }
 
 /** 
@@ -823,36 +1116,7 @@ function render(){
                 break;
 
                 case VIRUS:
-                    context.fillStyle = ground[i][j].color;
-                    context.fillRect(x, y, BOX_HEIGHT-4,BOX_WIDTH-4);
-
-                    //Don't smile
-                    context.fillStyle = "black";
-                    context.fillRect(x + 4, y+4,3,5);
-                    context.fillRect(x + 14, y+4,3,5);
-                    context.fillRect(x + 4, y + 13, 12, 3);
-                    context.fillRect(x + 3, y + 15, 3,3);
-                    context.fillRect(x + 15, y + 15, 3,3);
-
-                    //Corners
-                    context.fillStyle = "grey";
-                    
-                    context.fillRect(x,y,1,4)
-                    context.fillRect(x+1,y,3,1)
-                    context.fillRect(x+1,y+1,1,1)
-
-                    context.fillRect(x+20,y,1,4)
-                    context.fillRect(x+17,y,3,1)
-                    context.fillRect(x+19,y+1,1,1)
-
-                    
-                    context.fillRect(x,y+17,1,4)
-                    context.fillRect(x+1,y+20,3,1)
-                    context.fillRect(x+1,y+19,1,1)
-                    
-                    context.fillRect(x+20,y+17,1,4)
-                    context.fillRect(x+17,y+20,3,1)
-                    context.fillRect(x+19,y+19,1,1)
+                    renderVirus(x,y,ground[i][j].color);
                 break;
 
                 case CAPSULE:  
@@ -861,67 +1125,32 @@ function render(){
                     context.fillRect(x, y, BOX_HEIGHT-4,BOX_WIDTH-4);
 
                     //Corners
-                    context.fillStyle = "grey";
                     switch(ground[i][j].attached){
                         case RIGHT:
-                            context.fillRect(x,y,1,4)
-                            context.fillRect(x+1,y,3,1)
-                            context.fillRect(x+1,y+1,1,1)
-
-                            context.fillRect(x,y+17,1,4)
-                            context.fillRect(x+1,y+20,3,1)
-                            context.fillRect(x+1,y+19,1,1)    
+                            renderTopLeftCorner(x,y,"grey");
+                            renderBottomLeftCorner(x,y,"grey");
                         break;
 
                         case LEFT:
-                            context.fillRect(x+20,y,1,4)
-                            context.fillRect(x+17,y,3,1)
-                            context.fillRect(x+19,y+1,1,1)
-            
-                            context.fillRect(x+20,y+17,1,4)
-                            context.fillRect(x+17,y+20,3,1)
-                            context.fillRect(x+19,y+19,1,1)
+                            renderTopRightCorner(x,y,"grey");
+                            renderBottomRightCorner(x,y,"grey");
                         break;
 
                         case BOTTOM:
-                            context.fillRect(x,y,1,4)
-                            context.fillRect(x+1,y,3,1)
-                            context.fillRect(x+1,y+1,1,1)
-                            
-                            context.fillRect(x+20,y,1,4)
-                            context.fillRect(x+17,y,3,1)
-                            context.fillRect(x+19,y+1,1,1)    
+                            renderTopLeftCorner(x,y,"grey");
+                            renderTopRightCorner(x,y,"grey");
                         break;
 
                         case TOP:
-                            context.fillRect(x+20,y+17,1,4)
-                            context.fillRect(x+17,y+20,3,1)
-                            context.fillRect(x+19,y+19,1,1)
-
-                            context.fillRect(x,y+17,1,4)
-                            context.fillRect(x+1,y+20,3,1)
-                            context.fillRect(x+1,y+19,1,1)
+                            renderBottomLeftCorner(x,y,"grey");
+                            renderBottomRightCorner(x,y,"grey");
                         break;
+                        
                         default:
-                            //Corners
-                            context.fillStyle = "grey";
-                            
-                            context.fillRect(x,y,1,4)
-                            context.fillRect(x+1,y,3,1)
-                            context.fillRect(x+1,y+1,1,1)
-
-                            context.fillRect(x+20,y,1,4)
-                            context.fillRect(x+17,y,3,1)
-                            context.fillRect(x+19,y+1,1,1)
-
-                            
-                            context.fillRect(x,y+17,1,4)
-                            context.fillRect(x+1,y+20,3,1)
-                            context.fillRect(x+1,y+19,1,1)
-                            
-                            context.fillRect(x+20,y+17,1,4)
-                            context.fillRect(x+17,y+20,3,1)
-                            context.fillRect(x+19,y+19,1,1)
+                            renderTopLeftCorner(x,y,"grey");
+                            renderTopRightCorner(x,y,"grey");
+                            renderBottomLeftCorner(x,y,"grey");
+                            renderBottomRightCorner(x,y,"grey");
                         break;
                     }
                 break;
@@ -929,127 +1158,17 @@ function render(){
         }
     }
 
-    // Drawing the falling medicine
-    if(medicine.x != -1){
-        context.fillStyle = medicine.color1;
-        
-        var x = 202 + BOX_WIDTH*medicine.x;
-        var y = 142+BOX_HEIGHT*medicine.y;
-        context.fillRect(x, y, BOX_HEIGHT-4,BOX_WIDTH-4);
-         
-        //Corners
-        context.fillStyle = "grey";
-        switch(medicine.direction){
-            case RIGHT:
-                context.fillRect(x,y,1,4)
-                context.fillRect(x+1,y,3,1)
-                context.fillRect(x+1,y+1,1,1)
+    //Draw the falling medicine
+    renderMedicine(202 + BOX_WIDTH*medicine.x,142 + BOX_HEIGHT*medicine.y,medicine.color1,medicine.color2,medicine.direction);
 
-                context.fillRect(x,y+17,1,4)
-                context.fillRect(x+1,y+20,3,1)
-                context.fillRect(x+1,y+19,1,1)    
-            break;
+    // Victory or defeat screen
+    if(victory){
+        renderVictoryScreen();
+        renderStartText();
 
-            case LEFT:
-                context.fillRect(x+20,y,1,4)
-                context.fillRect(x+17,y,3,1)
-                context.fillRect(x+19,y+1,1,1)
-
-                context.fillRect(x+20,y+17,1,4)
-                context.fillRect(x+17,y+20,3,1)
-                context.fillRect(x+19,y+19,1,1)
-            break;
-
-            case BOTTOM:
-                context.fillRect(x,y,1,4)
-                context.fillRect(x+1,y,3,1)
-                context.fillRect(x+1,y+1,1,1)
-                
-                context.fillRect(x+20,y,1,4)
-                context.fillRect(x+17,y,3,1)
-                context.fillRect(x+19,y+1,1,1)    
-            break;
-
-            case TOP:
-                context.fillRect(x+20,y+17,1,4)
-                context.fillRect(x+17,y+20,3,1)
-                context.fillRect(x+19,y+19,1,1)
-
-                context.fillRect(x,y+17,1,4)
-                context.fillRect(x+1,y+20,3,1)
-                context.fillRect(x+1,y+19,1,1)
-            break;
-        }
-
-
-        
-        context.fillStyle = medicine.color2;
-        switch(medicine.direction){
-            case LEFT:
-                x = 202 + BOX_WIDTH*(medicine.x-1);
-                y = 142 + BOX_HEIGHT*medicine.y;
-            
-                context.fillRect(x, y, BOX_HEIGHT-4,BOX_WIDTH-4);
-                
-                context.fillStyle = "grey";
-                context.fillRect(x,y,1,4)
-                context.fillRect(x+1,y,3,1)
-                context.fillRect(x+1,y+1,1,1)
-
-                context.fillRect(x,y+17,1,4)
-                context.fillRect(x+1,y+20,3,1)
-                context.fillRect(x+1,y+19,1,1)  
-            break;
-    
-            case RIGHT:
-                x = 202 + BOX_WIDTH*(medicine.x+1);
-                y = 142+BOX_HEIGHT*medicine.y;
-                
-                context.fillRect(x, y, BOX_HEIGHT-4,BOX_WIDTH-4);
-                
-                context.fillStyle = "grey";
-                context.fillRect(x+20,y,1,4)    
-                context.fillRect(x+17,y,3,1)
-                context.fillRect(x+19,y+1,1,1)
-
-                context.fillRect(x+20,y+17,1,4)
-                context.fillRect(x+17,y+20,3,1)
-                context.fillRect(x+19,y+19,1,1)
-
-            break;
-    
-            case BOTTOM:                
-                x = 202 + BOX_WIDTH*medicine.x;
-                y = 142+BOX_HEIGHT*(medicine.y+1);
-            
-                context.fillRect(x, y, BOX_HEIGHT-4,BOX_WIDTH-4);
-                
-                context.fillStyle = "grey";
-                context.fillRect(x+20,y+17,1,4)
-                context.fillRect(x+17,y+20,3,1)
-                context.fillRect(x+19,y+19,1,1)
-
-                context.fillRect(x,y+17,1,4)
-                context.fillRect(x+1,y+20,3,1)
-                context.fillRect(x+1,y+19,1,1)
-            break;
-    
-            case TOP:    
-                x = 202 + BOX_WIDTH*medicine.x;
-                y = 142+BOX_HEIGHT*(medicine.y-1);
-            
-                context.fillRect(x, y, BOX_HEIGHT-4,BOX_WIDTH-4);
-                
-                context.fillStyle = "grey";
-                context.fillRect(x,y,1,4)
-                context.fillRect(x+1,y,3,1)
-                context.fillRect(x+1,y+1,1,1)
-                
-                context.fillRect(x+20,y,1,4)
-                context.fillRect(x+17,y,3,1)
-                context.fillRect(x+19,y+1,1,1)                  
-            break;
-        }    
+    } else if(defeat){
+        renderDefeatScreen();
+        renderStartText();
     }
 }
 
@@ -1083,6 +1202,21 @@ captureKeyboardPress = function(event) {
         //Space bar
         case 32:
             rotateMedicine();
+        break;
+
+        //Enter to play
+        case 13:
+            replayTheGame();
+        break;
+
+        //'V' for victory                                   // BETA FUNCTION
+        case 86:
+            victory = !victory;
+        break;
+
+        //'D' for defeat                                   // BETA FUNCTION
+        case 68:
+            defeat = !defeat;
         break;
     }    
 }
