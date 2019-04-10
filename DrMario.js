@@ -763,6 +763,9 @@ function rotateMedicine(){
 
 
 
+// ##########################################################################################
+// ##################################### Rendering ##########################################
+// ##########################################################################################
 
 
 /**
@@ -1159,7 +1162,17 @@ function render(){
     }
 
     //Draw the falling medicine
-    renderMedicine(202 + BOX_WIDTH*medicine.x,142 + BOX_HEIGHT*medicine.y,medicine.color1,medicine.color2,medicine.direction);
+    if(medicine.x>0){
+        renderMedicine(202 + BOX_WIDTH*medicine.x,142 + BOX_HEIGHT*medicine.y,medicine.color1,medicine.color2,medicine.direction);
+    }
+
+    //Draw the next medicine
+    context.fillStyle = "grey"
+    context.fillRect(420,170,60,30);
+    context.fillStyle="black"
+    context.fillRect(448,175,4,21);
+    renderMedicine(427,175,nextMedicine.color1,nextMedicine.color2,nextMedicine.direction);
+    
 
     // Victory or defeat screen
     if(victory){
