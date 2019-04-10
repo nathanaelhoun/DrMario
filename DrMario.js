@@ -1162,7 +1162,7 @@ function render(){
     }
 
     //Draw the falling medicine
-    if(medicine.x>0){
+    if(medicine.x>=0){
         renderMedicine(202 + BOX_WIDTH*medicine.x,142 + BOX_HEIGHT*medicine.y,medicine.color1,medicine.color2,medicine.direction);
     }
 
