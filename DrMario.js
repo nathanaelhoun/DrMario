@@ -843,10 +843,10 @@ function renderVictoryScreen() {
     //Text
     context.font = "40px Verdana";
     context.fillStyle = "black";
-    context.fillText("STAGE", 220, 250);
-    context.fillText("CLEAR", 250, 285);
-    context.fillText("TRY", 230, 350);
-    context.fillText("NEXT", 270, 385);
+    context.fillText("STAGE", 220, 250,160);
+    context.fillText("CLEAR", 250, 285,130);
+    context.fillText("TRY", 230, 350,150);
+    context.fillText("NEXT", 270, 385,110);
 }
 
 /**
@@ -864,9 +864,9 @@ function renderDefeatScreen() {
     //Text
     context.font = "40px Verdana";
     context.fillStyle = "black";
-    context.fillText("DEFEAT", 220, 250);
-    context.fillText("TRY", 220, 350);
-    context.fillText("AGAIN", 250, 385);
+    context.fillText("DEFEAT", 220, 250,160);
+    context.fillText("TRY", 220, 350,160);
+    context.fillText("AGAIN", 250, 385,130);
 }
 
 /**
@@ -929,7 +929,7 @@ function renderStartText() {
     if (showStartText) {
         context.font = "40px Verdana";
         context.fillStyle = "white";
-        context.fillText("START", 240, 500);
+        context.fillText("START", 240, 500,120);
     }
 }
 
@@ -1129,6 +1129,13 @@ function render() {
     //Render the different panels
     renderScorePanel();
     renderInformationPanel();
+        //Next medicine panel
+    renderEmptyPanel(425, 170, 100, 100);
+    
+    context.fillStyle = "black";
+    context.fillRect(473, 212, 4, 21);
+    renderMedicine(452, 212, nextMedicine.color1, nextMedicine. color2, nextMedicine.direction);
+    
 
     //Drawing the bottle
     context.fillStyle = BORDERS_COLOR;
@@ -1207,18 +1214,6 @@ function render() {
         );
     }
 
-    //Draw the next medicine
-    context.fillStyle = BACKGROUND_COLOR;
-    context.fillRect(420, 170, 60, 30);
-    context.fillStyle = "black";
-    context.fillRect(448, 175, 4, 21);
-    renderMedicine(
-        427,
-        175,
-        nextMedicine.color1,
-        nextMedicine.color2,
-        nextMedicine.direction
-    );
 
     // Victory or defeat screen
     if (victory) {
