@@ -112,7 +112,7 @@ function replayTheGame() {
     } else if (defeat) {
         defeat = false;
         playerScore = 0;
-        
+
         bottle = bottleInitialization(bottle);
         bottle = randomVirus(bottle, 4 * numLevel);
 
@@ -284,7 +284,7 @@ function detectColorMatching(matrice) {
                         }
                         //Destroy
                         matrice[y][j] = JSON.parse(JSON.stringify(EMPTY_BOX));
-                        
+
                         gravityRecheck = true;
                     }
                 }
@@ -350,7 +350,7 @@ function detectColorMatching(matrice) {
                                 break;
                         }
                         matrice[i][x] = JSON.parse(JSON.stringify(EMPTY_BOX));
-                        
+
                         gravityRecheck = true;
                     }
                 }
@@ -869,24 +869,54 @@ function renderDefeatScreen() {
     context.fillText("AGAIN", 250, 385);
 }
 
+/**
+ * Render an empty panel
+ * @param int x the x coordinate of the panel
+ * @param int y the y coordinate of the panel
+ * @param int width of the panel
+ * @param int height of the panel
+ */
+function renderEmptyPanel(x, y, width, height) {
+    context.fillStyle = BORDERS_COLOR;
+    context.fillRect(x, y, width + 4, height + 4);
+    context.fillStyle = BACKGROUND_COLOR;
+    context.fillRect(x + 2, y + 2, width, height);
+}
 
 /**
  * Render the score panel
  */
 function renderScorePanel() {
-    context.fillStyle = BORDERS_COLOR;
-    context.fillRect(70,140,104,104);
-    context.fillStyle = BACKGROUND_COLOR;
-    context.fillRect(72, 142, 100, 100);
+    renderEmptyPanel(70, 140, 100, 100);
 
     context.fillStyle = "black";
     context.font = "bold 25px Arial"
-    context.fillText("TOP : ",77,167,90);
-    context.fillText(topScore,77,189,90);
+    context.fillText("TOP : ", 77, 167, 90);
+    context.fillText(topScore, 77, 189, 90);
 
-    context.fillText("SCORE : ",77,217,90);
-    context.fillText(playerScore,77,237,90);
+    context.fillText("SCORE : ", 77, 217, 90);
+    context.fillText(playerScore, 77, 237, 90);
 }
+
+/**
+ * Render information panel
+ */
+function renderInformationPanel() {
+    renderEmptyPanel(425, 300, 100, 200);
+
+    context.fillStyle = "black";
+    context.font = "bold 25px Arial"
+    // Level number
+    context.fillText("LEVEL ", 432, 332, 90);
+    context.fillText(numLevel, 472, 357, 50);
+    // Level speed
+    context.fillText("SPEED ", 432, 397, 90);
+    context.fillText("So low", 432, 422, 90);
+    // Number of virus
+    context.fillText("VIRUS ", 432, 462, 90);
+    context.fillText(levelNumberOfVirus, 472, 487, 50);
+}
+
 
 /**
  * Render "start" with blinking
@@ -1076,9 +1106,9 @@ function update() {
 
     //Updating score && topScore
     levelNumberOfVirus = countRemainingVirusNumber(bottle);
-    playerScore += (beginningNumberOfVirus - levelNumberOfVirus)*200;
+    playerScore += (beginningNumberOfVirus - levelNumberOfVirus) * 200;
 
-    if(topScore < playerScore){
+    if (topScore < playerScore) {
         topScore = playerScore;
     }
 
@@ -1098,20 +1128,20 @@ function render() {
 
     //Render the different panels
     renderScorePanel();
+    renderInformationPanel();
 
     //Drawing the bottle
-    context.fillStyle = "white";
-    context.fillRect(
-        200,
-        140,
-        BOTTLE_WIDTH * BOX_WIDTH,
-        BOTTLE_HEIGHT * BOX_HEIGHT
-    );
+    context.fillStyle = BORDERS_COLOR;
+    context.fillRect(190, 130, 220, 420);
+    context.fillStyle = BACKGROUND_COLOR;
+    context.fillRect(193, 133, 214, 414);
+    context.fillStyle = BORDERS_COLOR;
+    context.fillRect(197, 137, 206, 406);
 
     //Draw the bottle's content
     for (var i = 0; i < BOTTLE_HEIGHT; i++) {
         for (var j = 0; j < BOTTLE_WIDTH; j++) {
-            context.fillStyle = BORDERS_COLOR ;
+            context.fillStyle = BORDERS_COLOR;
             context.fillRect(200 + 25 * j, 140 + 25 * i, BOX_HEIGHT, BOX_WIDTH);
 
             var x = 202 + BOX_WIDTH * j;
