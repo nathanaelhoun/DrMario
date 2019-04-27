@@ -28,9 +28,9 @@ var showStartText = false;
 var bottle = [];
 
 const EMPTY_BOX = {
-  type: 0,
-  color: 0,
-  attached: 0
+    type: 0,
+    color: 0,
+    attached: 0
 };
 
 // Coloration variables
@@ -56,19 +56,19 @@ const BOTTOM = 2;
 const LEFT = 3;
 
 var medicine = {
-  x: -1,
-  y: -1,
-  direction: RIGHT,
-  color1: "green",
-  color2: "green"
+    x: -1,
+    y: -1,
+    direction: RIGHT,
+    color1: "green",
+    color2: "green"
 };
 
 var nextMedicine = {
-  x: -1,
-  y: -1,
-  direction: RIGHT,
-  color1: "green",
-  color2: "green"
+    x: -1,
+    y: -1,
+    direction: RIGHT,
+    color1: "green",
+    color2: "green"
 };
 
 // ##########################################################################################
@@ -80,7 +80,7 @@ var nextMedicine = {
  * @return true if the player wins
  */
 function isVictory() {
-  return remainingVirusNumber(bottle) == 0;
+    return remainingVirusNumber(bottle) == 0;
 }
 
 /**
@@ -88,37 +88,38 @@ function isVictory() {
  * @return true if the player loses
  */
 function isDefeat() {
-  return bottle[0][3].type != 0 || bottle[0][4].type != 0;
+    return bottle[0][3].type != 0 || bottle[0][4].type != 0;
 }
 
 /**
  * When 'enter' key is pressed, replay or go to next level
  */
 function replayTheGame() {
-  if (victory) {
-    numLevel++;
-    victory = false;
+    if (victory) {
+        numLevel++;
+        victory = false;
+        isMedicineFalling = true;
 
-    bottle = groundInitialization(bottle);
-    bottle = randomVirus(bottle, 4 * numLevel);
+        bottle = groundInitialization(bottle);
+        bottle = randomVirus(bottle, 4 * numLevel);
 
-    medicine = createMedicine(medicine);
-  } else if (defeat) {
-    defeat = false;
-    //playerScore = 0;
-    //numVirus =
-    bottle = groundInitialization(bottle);
-    bottle = randomVirus(bottle, 4 * numLevel);
+        medicine = createMedicine(medicine);
+    } else if (defeat) {
+        defeat = false;
+        //playerScore = 0;
+        //numVirus =
+        bottle = groundInitialization(bottle);
+        bottle = randomVirus(bottle, 4 * numLevel);
 
-    medicine = createMedicine(medicine);
-  }
+        medicine = createMedicine(medicine);
+    }
 }
 
 /**
  * @return a random number corresponding to a color in the COLORS array
  */
 function randomColor() {
-  return COLORS[Math.floor(Math.random() * COLORS.length)];
+    return COLORS[Math.floor(Math.random() * COLORS.length)];
 }
 
 /**
@@ -127,14 +128,14 @@ function randomColor() {
  * @return an empty matrice
  */
 function groundInitialization(matrice) {
-  for (var i = 0; i < BOTTLE_HEIGHT; i++) {
-    var line = [];
-    for (var j = 0; j < BOTTLE_WIDTH; j++) {
-      line[j] = JSON.parse(JSON.stringify(EMPTY_BOX));
+    for (var i = 0; i < BOTTLE_HEIGHT; i++) {
+        var line = [];
+        for (var j = 0; j < BOTTLE_WIDTH; j++) {
+            line[j] = JSON.parse(JSON.stringify(EMPTY_BOX));
+        }
+        matrice[i] = line;
     }
-    matrice[i] = line;
-  }
-  return matrice;
+    return matrice;
 }
 
 /**
@@ -144,28 +145,28 @@ function groundInitialization(matrice) {
  * @return the matrice with the virus
  */
 function randomVirus(matrice, numberOfVirus) {
-  var actualNumberOfVirus = 0;
-  while (actualNumberOfVirus < numberOfVirus && !isGroundFilled(matrice)) {
-    var randomLine = -1;
-    var randomColumn = -1;
+    var actualNumberOfVirus = 0;
+    while (actualNumberOfVirus < numberOfVirus && !isGroundFilled(matrice)) {
+        var randomLine = -1;
+        var randomColumn = -1;
 
-    do {
-      randomLine = Math.floor(Math.random() * (BOTTLE_HEIGHT - 4) + 4);
-      randomColumn = Math.floor(Math.random() * BOTTLE_WIDTH);
-    } while (
-      matrice[randomLine][randomColumn].type !== 0 &&
-      !isGroundFilled(matrice)
-    );
+        do {
+            randomLine = Math.floor(Math.random() * (BOTTLE_HEIGHT - 4) + 4);
+            randomColumn = Math.floor(Math.random() * BOTTLE_WIDTH);
+        } while (
+            matrice[randomLine][randomColumn].type !== 0 &&
+            !isGroundFilled(matrice)
+        );
 
-    if (randomLine >= 0 && randomColumn >= 0) {
-      matrice[randomLine][randomColumn].color = randomColor();
-      matrice[randomLine][randomColumn].type = VIRUS;
-      matrice[randomLine][randomColumn].attached = -1;
-      actualNumberOfVirus++;
+        if (randomLine >= 0 && randomColumn >= 0) {
+            matrice[randomLine][randomColumn].color = randomColor();
+            matrice[randomLine][randomColumn].type = VIRUS;
+            matrice[randomLine][randomColumn].attached = -1;
+            actualNumberOfVirus++;
+        }
     }
-  }
 
-  return matrice;
+    return matrice;
 }
 
 /**
@@ -174,20 +175,20 @@ function randomVirus(matrice, numberOfVirus) {
  * @return true if it is
  */
 function isGroundFilled(matrice) {
-  var existOneEmptyBox = false;
-  var i = 4;
-  var j = 0;
-  while (i < BOTTLE_HEIGHT && !existOneEmptyBox) {
-    j = 0;
-    while (j < BOTTLE_WIDTH && !existOneEmptyBox) {
-      if (matrice[i][j].type === 0) {
-        existOneEmptyBox = true;
-      }
-      j++;
+    var existOneEmptyBox = false;
+    var i = 4;
+    var j = 0;
+    while (i < BOTTLE_HEIGHT && !existOneEmptyBox) {
+        j = 0;
+        while (j < BOTTLE_WIDTH && !existOneEmptyBox) {
+            if (matrice[i][j].type === 0) {
+                existOneEmptyBox = true;
+            }
+            j++;
+        }
+        i++;
     }
-    i++;
-  }
-  return !existOneEmptyBox;
+    return !existOneEmptyBox;
 }
 
 /**
@@ -196,17 +197,17 @@ function isGroundFilled(matrice) {
  * @return the number of remaining virus
  */
 function remainingVirusNumber(matrice) {
-  var virusNumber = 0;
+    var virusNumber = 0;
 
-  for (var i = 0; i < BOTTLE_HEIGHT; i++) {
-    for (var j = 0; j < BOTTLE_WIDTH; j++) {
-      if (matrice[i][j].type == VIRUS) {
-        virusNumber++;
-      }
+    for (var i = 0; i < BOTTLE_HEIGHT; i++) {
+        for (var j = 0; j < BOTTLE_WIDTH; j++) {
+            if (matrice[i][j].type == VIRUS) {
+                virusNumber++;
+            }
+        }
     }
-  }
 
-  return virusNumber;
+    return virusNumber;
 }
 
 /**
@@ -214,146 +215,146 @@ function remainingVirusNumber(matrice) {
  * @param {*} matrice the ground in an 2-dim array
  */
 function detectColorMatching(matrice) {
-  //vertical
-  var isVerticalMatchingFound;
-  do {
-    isVerticalMatchingFound = false;
-    var i = 15;
-    while (i >= 3 && !isVerticalMatchingFound) {
-      var j = 0;
-      while (j < 8 && !isVerticalMatchingFound) {
-        if (bottle[i][j].type != 0) {
-          if (
-            matrice[i][j].color == matrice[i - 1][j].color &&
-            matrice[i][j].color == matrice[i - 2][j].color &&
-            matrice[i][j].color == matrice[i - 3][j].color
-          ) {
-            isVerticalMatchingFound = true;
+    //vertical
+    var isVerticalMatchingFound;
+    do {
+        isVerticalMatchingFound = false;
+        var i = 15;
+        while (i >= 3 && !isVerticalMatchingFound) {
+            var j = 0;
+            while (j < 8 && !isVerticalMatchingFound) {
+                if (bottle[i][j].type != 0) {
+                    if (
+                        matrice[i][j].color == matrice[i - 1][j].color &&
+                        matrice[i][j].color == matrice[i - 2][j].color &&
+                        matrice[i][j].color == matrice[i - 3][j].color
+                    ) {
+                        isVerticalMatchingFound = true;
 
-            //Destroy
-            var y = i;
-            do {
-              //Un-attach the attached part
-              switch (matrice[y][j].attached) {
-                case RIGHT:
-                  matrice[y][j + 1].attached = -1;
-                  break;
+                        //Destroy
+                        var y = i;
+                        do {
+                            //Un-attach the attached part
+                            switch (matrice[y][j].attached) {
+                                case RIGHT:
+                                    matrice[y][j + 1].attached = -1;
+                                    break;
 
-                case TOP:
-                  matrice[y - 1][j].attached = -1;
-                  break;
+                                case TOP:
+                                    matrice[y - 1][j].attached = -1;
+                                    break;
 
-                case LEFT:
-                  matrice[y][j - 1].attached = -1;
-                  break;
+                                case LEFT:
+                                    matrice[y][j - 1].attached = -1;
+                                    break;
 
-                case BOTTOM:
-                  matrice[y + 1][j].attached = -1;
-                  break;
-              }
-              //Destroy
-              matrice[y][j] = JSON.parse(JSON.stringify(EMPTY_BOX));
+                                case BOTTOM:
+                                    matrice[y + 1][j].attached = -1;
+                                    break;
+                            }
+                            //Destroy
+                            matrice[y][j] = JSON.parse(JSON.stringify(EMPTY_BOX));
 
-              y--;
-            } while (matrice[y][j].color == matrice[y - 1][j].color);
+                            y--;
+                        } while (matrice[y][j].color == matrice[y - 1][j].color);
 
-            //Last one
-            //Un-attach the attached part
-            switch (matrice[y][j].attached) {
-              case RIGHT:
-                matrice[y][j + 1].attached = -1;
-                break;
+                        //Last one
+                        //Un-attach the attached part
+                        switch (matrice[y][j].attached) {
+                            case RIGHT:
+                                matrice[y][j + 1].attached = -1;
+                                break;
 
-              case TOP:
-                matrice[y - 1][j].attached = -1;
-                break;
+                            case TOP:
+                                matrice[y - 1][j].attached = -1;
+                                break;
 
-              case LEFT:
-                matrice[y][j - 1].attached = -1;
-                break;
+                            case LEFT:
+                                matrice[y][j - 1].attached = -1;
+                                break;
 
-              case BOTTOM:
-                matrice[y + 1][j].attached = -1;
-                break;
+                            case BOTTOM:
+                                matrice[y + 1][j].attached = -1;
+                                break;
+                        }
+                        //Destroy
+                        matrice[y][j] = JSON.parse(JSON.stringify(EMPTY_BOX));
+
+                        gravityRecheck = true;
+                    }
+                }
+                j++;
             }
-            //Destroy
-            matrice[y][j] = JSON.parse(JSON.stringify(EMPTY_BOX));
-
-            gravityRecheck = true;
-          }
+            i--;
         }
-        j++;
-      }
-      i--;
-    }
-  } while (isVerticalMatchingFound);
+    } while (isVerticalMatchingFound);
 
-  //Horizontal
-  var isHorizontalMatchingFound;
-  do {
-    isHorizontalMatchingFound = false;
-    var i = 15;
-    while (i >= 0 && !isHorizontalMatchingFound) {
-      var j = 0;
-      while (j < 5 && !isHorizontalMatchingFound) {
-        if (bottle[i][j].type != 0) {
-          if (
-            matrice[i][j].color == matrice[i][j + 1].color &&
-            matrice[i][j].color == matrice[i][j + 2].color &&
-            matrice[i][j].color == matrice[i][j + 3].color
-          ) {
-            isHorizontalMatchingFound = true;
-            var x = j;
-            while (matrice[i][x].color == matrice[i][x + 1].color) {
-              switch (matrice[i][x].attached) {
-                case RIGHT:
-                  matrice[i][x + 1].attached = -1;
-                  break;
+    //Horizontal
+    var isHorizontalMatchingFound;
+    do {
+        isHorizontalMatchingFound = false;
+        var i = 15;
+        while (i >= 0 && !isHorizontalMatchingFound) {
+            var j = 0;
+            while (j < 5 && !isHorizontalMatchingFound) {
+                if (bottle[i][j].type != 0) {
+                    if (
+                        matrice[i][j].color == matrice[i][j + 1].color &&
+                        matrice[i][j].color == matrice[i][j + 2].color &&
+                        matrice[i][j].color == matrice[i][j + 3].color
+                    ) {
+                        isHorizontalMatchingFound = true;
+                        var x = j;
+                        while (matrice[i][x].color == matrice[i][x + 1].color) {
+                            switch (matrice[i][x].attached) {
+                                case RIGHT:
+                                    matrice[i][x + 1].attached = -1;
+                                    break;
 
-                case TOP:
-                  matrice[i - 1][x].attached = -1;
-                  break;
+                                case TOP:
+                                    matrice[i - 1][x].attached = -1;
+                                    break;
 
-                case LEFT:
-                  matrice[i][x - 1].attached = -1;
-                  break;
+                                case LEFT:
+                                    matrice[i][x - 1].attached = -1;
+                                    break;
 
-                case BOTTOM:
-                  matrice[i + 1][x].attached = -1;
-                  break;
-              }
-              matrice[i][x] = JSON.parse(JSON.stringify(EMPTY_BOX));
-              x++;
+                                case BOTTOM:
+                                    matrice[i + 1][x].attached = -1;
+                                    break;
+                            }
+                            matrice[i][x] = JSON.parse(JSON.stringify(EMPTY_BOX));
+                            x++;
+                        }
+
+                        switch (matrice[i][x].attached) {
+                            case RIGHT:
+                                matrice[i][x + 1].attached = -1;
+                                break;
+
+                            case TOP:
+                                matrice[i - 1][x].attached = -1;
+                                break;
+
+                            case LEFT:
+                                matrice[i][x - 1].attached = -1;
+                                break;
+
+                            case BOTTOM:
+                                matrice[i + 1][x].attached = -1;
+                                break;
+                        }
+                        matrice[i][x] = JSON.parse(JSON.stringify(EMPTY_BOX));
+                        gravityRecheck = true;
+                    }
+                }
+                j++;
             }
-
-            switch (matrice[i][x].attached) {
-              case RIGHT:
-                matrice[i][x + 1].attached = -1;
-                break;
-
-              case TOP:
-                matrice[i - 1][x].attached = -1;
-                break;
-
-              case LEFT:
-                matrice[i][x - 1].attached = -1;
-                break;
-
-              case BOTTOM:
-                matrice[i + 1][x].attached = -1;
-                break;
-            }
-            matrice[i][x] = JSON.parse(JSON.stringify(EMPTY_BOX));
-            gravityRecheck = true;
-          }
+            i--;
         }
-        j++;
-      }
-      i--;
-    }
-  } while (isHorizontalMatchingFound);
+    } while (isHorizontalMatchingFound);
 
-  return matrice;
+    return matrice;
 }
 
 /**
@@ -362,59 +363,59 @@ function detectColorMatching(matrice) {
  * @return the updated ground
  */
 function capsuleGravity(matrice) {
-  gravityRecheck = false;
-  //Detect
-  for (var i = 14; i >= 0; i--) {
-    for (var j = 0; j < 8; j++) {
-      if (matrice[i][j].type === CAPSULE) {
-        if (
-          i + 1 < 16 &&
-          (matrice[i + 1][j].type == 0 ||
-            matrice[i + 1][j].type == FALLING_CAPSULE)
-        ) {
-          var fall = true;
-          switch (matrice[i][j].attached) {
-            case RIGHT:
-              if (
-                matrice[i + 1][j + 1].type != 0 &&
-                matrice[i + 1][j + 1].type != FALLING_CAPSULE
-              ) {
-                fall = false;
-              }
-              break;
+    gravityRecheck = false;
+    //Detect
+    for (var i = 14; i >= 0; i--) {
+        for (var j = 0; j < 8; j++) {
+            if (matrice[i][j].type === CAPSULE) {
+                if (
+                    i + 1 < 16 &&
+                    (matrice[i + 1][j].type == 0 ||
+                        matrice[i + 1][j].type == FALLING_CAPSULE)
+                ) {
+                    var fall = true;
+                    switch (matrice[i][j].attached) {
+                        case RIGHT:
+                            if (
+                                matrice[i + 1][j + 1].type != 0 &&
+                                matrice[i + 1][j + 1].type != FALLING_CAPSULE
+                            ) {
+                                fall = false;
+                            }
+                            break;
 
-            case LEFT:
-              if (
-                matrice[i + 1][j - 1].type != 0 &&
-                matrice[i + 1][j - 1].type != FALLING_CAPSULE
-              ) {
-                fall = false;
-              }
-              break;
-          }
+                        case LEFT:
+                            if (
+                                matrice[i + 1][j - 1].type != 0 &&
+                                matrice[i + 1][j - 1].type != FALLING_CAPSULE
+                            ) {
+                                fall = false;
+                            }
+                            break;
+                    }
 
-          if (fall) {
-            gravityRecheck = true;
-            matrice[i][j].type = FALLING_CAPSULE;
-          }
+                    if (fall) {
+                        gravityRecheck = true;
+                        matrice[i][j].type = FALLING_CAPSULE;
+                    }
+                }
+            }
         }
-      }
     }
-  }
 
-  //Make fall
-  for (var i = 14; i >= 0; i--) {
-    for (var j = 0; j < 8; j++) {
-      if (matrice[i][j].type === FALLING_CAPSULE) {
-        matrice[i + 1][j].color = matrice[i][j].color;
-        matrice[i + 1][j].type = CAPSULE;
-        matrice[i + 1][j].attached = matrice[i][j].attached;
-        matrice[i][j] = JSON.parse(JSON.stringify(EMPTY_BOX));
-      }
+    //Make fall
+    for (var i = 14; i >= 0; i--) {
+        for (var j = 0; j < 8; j++) {
+            if (matrice[i][j].type === FALLING_CAPSULE) {
+                matrice[i + 1][j].color = matrice[i][j].color;
+                matrice[i + 1][j].type = CAPSULE;
+                matrice[i + 1][j].attached = matrice[i][j].attached;
+                matrice[i][j] = JSON.parse(JSON.stringify(EMPTY_BOX));
+            }
+        }
     }
-  }
 
-  return matrice;
+    return matrice;
 }
 
 /**
@@ -423,14 +424,14 @@ function capsuleGravity(matrice) {
  * @return the medicine created
  */
 function createMedicine(med) {
-  med = {
-    x: 3,
-    y: 0,
-    direction: RIGHT,
-    color1: randomColor(),
-    color2: randomColor()
-  };
-  return med;
+    med = {
+        x: 3,
+        y: 0,
+        direction: RIGHT,
+        color1: randomColor(),
+        color2: randomColor()
+    };
+    return med;
 }
 
 /**
@@ -440,16 +441,16 @@ function createMedicine(med) {
  * @return {*} the new med filled with the content of the old one
  */
 function copyMedicine(oldMed, newMed) {
-  newMed = {
-    x: oldMed.x,
-    y: oldMed.y,
-    direction: oldMed.direction,
-    color1: oldMed.color1,
-    color2: oldMed.color2
-  };
-  isMedicineFalling = true;
-  gravityRecheck = false;
-  return newMed;
+    newMed = {
+        x: oldMed.x,
+        y: oldMed.y,
+        direction: oldMed.direction,
+        color1: oldMed.color1,
+        color2: oldMed.color2
+    };
+    isMedicineFalling = true;
+    gravityRecheck = false;
+    return newMed;
 }
 
 /**
@@ -458,39 +459,39 @@ function copyMedicine(oldMed, newMed) {
  * @return med the medicine with updated coordinates
  */
 function medicineFalling(med) {
-  if (med.y >= 15) {
-    isMedicineFalling = false;
-  } else {
-    if (bottle[med.y + 1][med.x].type != 0) {
-      isMedicineFalling = false;
+    if (med.y >= 15) {
+        isMedicineFalling = false;
     } else {
-      switch (med.direction) {
-        case RIGHT:
-          if (bottle[med.y + 1][med.x + 1].type != 0) {
+        if (bottle[med.y + 1][med.x].type != 0) {
             isMedicineFalling = false;
-          }
-          break;
+        } else {
+            switch (med.direction) {
+                case RIGHT:
+                    if (bottle[med.y + 1][med.x + 1].type != 0) {
+                        isMedicineFalling = false;
+                    }
+                    break;
 
-        case LEFT:
-          if (bottle[med.y + 1][med.x - 1].type != 0) {
-            isMedicineFalling = false;
-          }
-          break;
+                case LEFT:
+                    if (bottle[med.y + 1][med.x - 1].type != 0) {
+                        isMedicineFalling = false;
+                    }
+                    break;
 
-        case BOTTOM:
-          if (med.y >= 14) {
-            isMedicineFalling = false;
-          } else if (bottle[med.y + 2][med.x].type != 0) {
-            isMedicineFalling = false;
-          }
-          break;
-      }
+                case BOTTOM:
+                    if (med.y >= 14) {
+                        isMedicineFalling = false;
+                    } else if (bottle[med.y + 2][med.x].type != 0) {
+                        isMedicineFalling = false;
+                    }
+                    break;
+            }
+        }
     }
-  }
-  if (isMedicineFalling) {
-    med.y++;
-  }
-  return med;
+    if (isMedicineFalling) {
+        med.y++;
+    }
+    return med;
 }
 
 /**
@@ -500,244 +501,244 @@ function medicineFalling(med) {
  * @return the updated matrice
  */
 function transferMedicineToGround(matrice, med) {
-  if (med.x != -1) {
-    matrice[med.y][med.x].type = CAPSULE;
-    matrice[med.y][med.x].color = med.color1;
-    matrice[med.y][med.x].attached = med.direction;
+    if (med.x != -1) {
+        matrice[med.y][med.x].type = CAPSULE;
+        matrice[med.y][med.x].color = med.color1;
+        matrice[med.y][med.x].attached = med.direction;
 
-    var x2, y2, direction2;
-    switch (med.direction) {
-      case RIGHT:
-        x2 = med.x + 1;
-        y2 = med.y;
-        direction2 = LEFT;
-        break;
+        var x2, y2, direction2;
+        switch (med.direction) {
+            case RIGHT:
+                x2 = med.x + 1;
+                y2 = med.y;
+                direction2 = LEFT;
+                break;
 
-      case BOTTOM:
-        x2 = med.x;
-        y2 = med.y + 1;
-        direction2 = TOP;
-        break;
+            case BOTTOM:
+                x2 = med.x;
+                y2 = med.y + 1;
+                direction2 = TOP;
+                break;
 
-      case LEFT:
-        x2 = med.x - 1;
-        y2 = med.y;
-        direction2 = RIGHT;
-        break;
+            case LEFT:
+                x2 = med.x - 1;
+                y2 = med.y;
+                direction2 = RIGHT;
+                break;
 
-      case TOP:
-        x2 = med.x;
-        y2 = med.y - 1;
-        direction2 = BOTTOM;
-        break;
+            case TOP:
+                x2 = med.x;
+                y2 = med.y - 1;
+                direction2 = BOTTOM;
+                break;
+        }
+        matrice[y2][x2].type = CAPSULE;
+        matrice[y2][x2].color = med.color2;
+        matrice[y2][x2].attached = direction2;
+
+        medicine = {
+            x: -1,
+            y: -1,
+            direction: RIGHT,
+            color1: "green",
+            color2: "green"
+        };
+        gravityRecheck = true;
     }
-    matrice[y2][x2].type = CAPSULE;
-    matrice[y2][x2].color = med.color2;
-    matrice[y2][x2].attached = direction2;
-
-    medicine = {
-      x: -1,
-      y: -1,
-      direction: RIGHT,
-      color1: "green",
-      color2: "green"
-    };
-    gravityRecheck = true;
-  }
-  return matrice;
+    return matrice;
 }
 
 /**
  * Check if we can move down the medicine (and do if it is possible)
  */
 function moveMedicineDown() {
-  var isMoveAllowed = true;
-  if (medicine.y >= 15 || medicine.x == -1) {
-    isMoveAllowed = false;
-  } else {
-    if (bottle[medicine.y + 1][medicine.x].type != 0) {
-      isMoveAllowed = false;
+    var isMoveAllowed = true;
+    if (medicine.y >= 15 || medicine.x == -1) {
+        isMoveAllowed = false;
     } else {
-      switch (medicine.direction) {
-        case RIGHT:
-          if (bottle[medicine.y + 1][medicine.x + 1].type != 0) {
+        if (bottle[medicine.y + 1][medicine.x].type != 0) {
             isMoveAllowed = false;
-          }
-          break;
+        } else {
+            switch (medicine.direction) {
+                case RIGHT:
+                    if (bottle[medicine.y + 1][medicine.x + 1].type != 0) {
+                        isMoveAllowed = false;
+                    }
+                    break;
 
-        case LEFT:
-          if (bottle[medicine.y + 1][medicine.x - 1].type != 0) {
-            isMoveAllowed = false;
-          }
-          break;
+                case LEFT:
+                    if (bottle[medicine.y + 1][medicine.x - 1].type != 0) {
+                        isMoveAllowed = false;
+                    }
+                    break;
 
-        case BOTTOM:
-          if (medicine.y >= 14) {
-            isMoveAllowed = false;
-          } else if (bottle[medicine.y + 2][medicine.x].type != 0) {
-            isMoveAllowed = false;
-          }
-          break;
-      }
+                case BOTTOM:
+                    if (medicine.y >= 14) {
+                        isMoveAllowed = false;
+                    } else if (bottle[medicine.y + 2][medicine.x].type != 0) {
+                        isMoveAllowed = false;
+                    }
+                    break;
+            }
+        }
     }
-  }
-  if (isMoveAllowed) {
-    medicine.y++;
-  } else {
-    isMedicineFalling = false;
-  }
+    if (isMoveAllowed) {
+        medicine.y++;
+    } else {
+        isMedicineFalling = false;
+    }
 }
 
 /**
  * Check if we can move to the left the medicine (and do if it is possible)
  */
 function moveMedicineLeft() {
-  var isMoveAllowed = true;
+    var isMoveAllowed = true;
 
-  if (medicine.x <= 0) {
-    isMoveAllowed = false;
-  } else if (bottle[medicine.y][medicine.x - 1].type != 0) {
-    isMoveAllowed = false;
-  } else {
-    switch (medicine.direction) {
-      case LEFT:
-        if (medicine.x <= 1) {
-          isMoveAllowed = false;
-        } else if (bottle[medicine.y][medicine.x - 2].type != 0) {
-          isMoveAllowed = false;
-        }
-        break;
+    if (medicine.x <= 0) {
+        isMoveAllowed = false;
+    } else if (bottle[medicine.y][medicine.x - 1].type != 0) {
+        isMoveAllowed = false;
+    } else {
+        switch (medicine.direction) {
+            case LEFT:
+                if (medicine.x <= 1) {
+                    isMoveAllowed = false;
+                } else if (bottle[medicine.y][medicine.x - 2].type != 0) {
+                    isMoveAllowed = false;
+                }
+                break;
 
-      case BOTTOM:
-        if (bottle[medicine.y + 1][medicine.x - 1].type != 0) {
-          isMoveAllowed = false;
-        }
-        break;
+            case BOTTOM:
+                if (bottle[medicine.y + 1][medicine.x - 1].type != 0) {
+                    isMoveAllowed = false;
+                }
+                break;
 
-      case TOP:
-        if (bottle[medicine.y - 1][medicine.x - 1].type != 0) {
-          isMoveAllowed = false;
+            case TOP:
+                if (bottle[medicine.y - 1][medicine.x - 1].type != 0) {
+                    isMoveAllowed = false;
+                }
+                break;
         }
-        break;
     }
-  }
 
-  if (isMoveAllowed) {
-    medicine.x--;
-  }
+    if (isMoveAllowed) {
+        medicine.x--;
+    }
 }
 
 /**
  * Check if we can move to the right the medicine (and do if it is possible)
  */
 function moveMedicineRight() {
-  var isMoveAllowed = true;
+    var isMoveAllowed = true;
 
-  if (medicine.x >= 7 || medicine.x == -1) {
-    isMoveAllowed = false;
-  } else if (bottle[medicine.y][medicine.x + 1].type != 0) {
-    isMoveAllowed = false;
-  } else {
-    switch (medicine.direction) {
-      case RIGHT:
-        if (medicine.x >= 6) {
-          isMoveAllowed = false;
-        } else if (bottle[medicine.y][medicine.x + 2].type != 0) {
-          isMoveAllowed = false;
-        }
-        break;
+    if (medicine.x >= 7 || medicine.x == -1) {
+        isMoveAllowed = false;
+    } else if (bottle[medicine.y][medicine.x + 1].type != 0) {
+        isMoveAllowed = false;
+    } else {
+        switch (medicine.direction) {
+            case RIGHT:
+                if (medicine.x >= 6) {
+                    isMoveAllowed = false;
+                } else if (bottle[medicine.y][medicine.x + 2].type != 0) {
+                    isMoveAllowed = false;
+                }
+                break;
 
-      case BOTTOM:
-        if (bottle[medicine.y + 1][medicine.x + 1].type != 0) {
-          isMoveAllowed = false;
-        }
-        break;
+            case BOTTOM:
+                if (bottle[medicine.y + 1][medicine.x + 1].type != 0) {
+                    isMoveAllowed = false;
+                }
+                break;
 
-      case TOP:
-        if (bottle[medicine.y - 1][medicine.x + 1].type != 0) {
-          isMoveAllowed = false;
+            case TOP:
+                if (bottle[medicine.y - 1][medicine.x + 1].type != 0) {
+                    isMoveAllowed = false;
+                }
+                break;
         }
-        break;
     }
-  }
 
-  if (isMoveAllowed) {
-    medicine.x++;
-  }
+    if (isMoveAllowed) {
+        medicine.x++;
+    }
 }
 
 /**
  * Check if we can rotate the medicine (and do if it is possible)
  */
 function rotateMedicine() {
-  if (medicine.x != -1) {
-    var isMoveAllowed = true;
-    var newdirection = medicine.direction - 1;
-    if (newdirection < 0) {
-      newdirection = 3;
+    if (medicine.x != -1) {
+        var isMoveAllowed = true;
+        var newdirection = medicine.direction - 1;
+        if (newdirection < 0) {
+            newdirection = 3;
+        }
+
+        var newX = medicine.x;
+        var newY = medicine.y;
+        switch (newdirection) {
+            case RIGHT:
+                newY += 1;
+                if (medicine.x >= 7) {
+                    newX -= 1;
+                } else if (bottle[medicine.y + 1][medicine.x + 1].type != 0) {
+                    if (bottle[medicine.y][medicine.x - 1].type == 0) {
+                        newX -= 1;
+                    } else {
+                        isMoveAllowed = false;
+                    }
+                }
+                break;
+
+            case BOTTOM:
+                newX -= 1;
+                newY -= 1;
+                if (bottle[medicine.y - 1][medicine.x - 1].type != 0) {
+                    if (bottle[medicine.y + 1][medicine.x].type == 0) {
+                        newY += 1;
+                    } else {
+                        isMoveAllowed = false;
+                    }
+                }
+                break;
+
+            case LEFT:
+                newX += 1;
+                if (medicine.x >= 7) {
+                    newX -= 1;
+                    if (bottle[medicine.y][medicine.x - 1].type != 0) {
+                        isMoveAllowed = false;
+                    }
+                } else if (bottle[medicine.y][medicine.x + 1].type != 0) {
+                    if (bottle[medicine.y][medicine.x - 1].type == 0) {
+                        newX -= 1;
+                    } else {
+                        isMoveAllowed = false;
+                    }
+                }
+                break;
+
+            case TOP:
+                if (bottle[medicine.y - 1][medicine.x].type != 0) {
+                    if (bottle[medicine.y + 1][medicine.x].type == 0) {
+                        newY += 1;
+                    } else {
+                        isMoveAllowed = false;
+                    }
+                }
+                break;
+        }
+
+        if (isMoveAllowed) {
+            medicine.direction = newdirection;
+            medicine.x = newX;
+            medicine.y = newY;
+        }
     }
-
-    var newX = medicine.x;
-    var newY = medicine.y;
-    switch (newdirection) {
-      case RIGHT:
-        newY += 1;
-        if (medicine.x >= 7) {
-          newX -= 1;
-        } else if (bottle[medicine.y + 1][medicine.x + 1].type != 0) {
-          if (bottle[medicine.y][medicine.x - 1].type == 0) {
-            newX -= 1;
-          } else {
-            isMoveAllowed = false;
-          }
-        }
-        break;
-
-      case BOTTOM:
-        newX -= 1;
-        newY -= 1;
-        if (bottle[medicine.y - 1][medicine.x - 1].type != 0) {
-          if (bottle[medicine.y + 1][medicine.x].type == 0) {
-            newY += 1;
-          } else {
-            isMoveAllowed = false;
-          }
-        }
-        break;
-
-      case LEFT:
-        newX += 1;
-        if (medicine.x >= 7) {
-          newX -= 1;
-          if (bottle[medicine.y][medicine.x - 1].type != 0) {
-            isMoveAllowed = false;
-          }
-        } else if (bottle[medicine.y][medicine.x + 1].type != 0) {
-          if (bottle[medicine.y][medicine.x - 1].type == 0) {
-            newX -= 1;
-          } else {
-            isMoveAllowed = false;
-          }
-        }
-        break;
-
-      case TOP:
-        if (bottle[medicine.y - 1][medicine.x].type != 0) {
-          if (bottle[medicine.y + 1][medicine.x].type == 0) {
-            newY += 1;
-          } else {
-            isMoveAllowed = false;
-          }
-        }
-        break;
-    }
-
-    if (isMoveAllowed) {
-      medicine.direction = newdirection;
-      medicine.x = newX;
-      medicine.y = newY;
-    }
-  }
 }
 
 // ##########################################################################################
@@ -751,10 +752,10 @@ function rotateMedicine() {
  * @param {*} color the color of the corner
  */
 function renderTopLeftCorner(x, y, color) {
-  context.fillStyle = color;
-  context.fillRect(x, y, 1, 4);
-  context.fillRect(x + 1, y, 3, 1);
-  context.fillRect(x + 1, y + 1, 1, 1);
+    context.fillStyle = color;
+    context.fillRect(x, y, 1, 4);
+    context.fillRect(x + 1, y, 3, 1);
+    context.fillRect(x + 1, y + 1, 1, 1);
 }
 
 /**
@@ -764,10 +765,10 @@ function renderTopLeftCorner(x, y, color) {
  * @param {*} color the color of the corner
  */
 function renderTopRightCorner(x, y, color) {
-  context.fillStyle = color;
-  context.fillRect(x + 20, y, 1, 4);
-  context.fillRect(x + 17, y, 3, 1);
-  context.fillRect(x + 19, y + 1, 1, 1);
+    context.fillStyle = color;
+    context.fillRect(x + 20, y, 1, 4);
+    context.fillRect(x + 17, y, 3, 1);
+    context.fillRect(x + 19, y + 1, 1, 1);
 }
 
 /**
@@ -777,10 +778,10 @@ function renderTopRightCorner(x, y, color) {
  * @param {*} color the color of the corner
  */
 function renderBottomLeftCorner(x, y, color) {
-  context.fillStyle = color;
-  context.fillRect(x, y + 17, 1, 4);
-  context.fillRect(x + 1, y + 20, 3, 1);
-  context.fillRect(x + 1, y + 19, 1, 1);
+    context.fillStyle = color;
+    context.fillRect(x, y + 17, 1, 4);
+    context.fillRect(x + 1, y + 20, 3, 1);
+    context.fillRect(x + 1, y + 19, 1, 1);
 }
 
 /**
@@ -790,10 +791,10 @@ function renderBottomLeftCorner(x, y, color) {
  * @param {*} color the color of the corner
  */
 function renderBottomRightCorner(x, y, color) {
-  context.fillStyle = color;
-  context.fillRect(x + 20, y + 17, 1, 4);
-  context.fillRect(x + 17, y + 20, 3, 1);
-  context.fillRect(x + 19, y + 19, 1, 1);
+    context.fillStyle = color;
+    context.fillRect(x + 20, y + 17, 1, 4);
+    context.fillRect(x + 17, y + 20, 3, 1);
+    context.fillRect(x + 19, y + 19, 1, 1);
 }
 
 /**
@@ -803,78 +804,78 @@ function renderBottomRightCorner(x, y, color) {
  * @param {*} color the color of the virus
  */
 function renderVirus(x, y, color) {
-  context.fillStyle = color;
-  context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
+    context.fillStyle = color;
+    context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
 
-  //Don't smile
-  context.fillStyle = "black";
-  context.fillRect(x + 4, y + 4, 3, 5);
-  context.fillRect(x + 14, y + 4, 3, 5);
-  context.fillRect(x + 4, y + 13, 12, 3);
-  context.fillRect(x + 3, y + 15, 3, 3);
-  context.fillRect(x + 15, y + 15, 3, 3);
+    //Don't smile
+    context.fillStyle = "black";
+    context.fillRect(x + 4, y + 4, 3, 5);
+    context.fillRect(x + 14, y + 4, 3, 5);
+    context.fillRect(x + 4, y + 13, 12, 3);
+    context.fillRect(x + 3, y + 15, 3, 3);
+    context.fillRect(x + 15, y + 15, 3, 3);
 
-  //Corners
-  renderTopLeftCorner(x, y, "grey");
-  renderTopRightCorner(x, y, "grey");
-  renderBottomLeftCorner(x, y, "grey");
-  renderBottomRightCorner(x, y, "grey");
+    //Corners
+    renderTopLeftCorner(x, y, "grey");
+    renderTopRightCorner(x, y, "grey");
+    renderBottomLeftCorner(x, y, "grey");
+    renderBottomRightCorner(x, y, "grey");
 }
 
 /**
  * Render the victory screen
  */
 function renderVictoryScreen() {
-  //Outline
-  context.fillStyle = "black";
-  context.fillRect(210, 200, 180, 200);
+    //Outline
+    context.fillStyle = "black";
+    context.fillRect(210, 200, 180, 200);
 
-  //Background
-  context.fillStyle = "grey";
-  context.fillRect(215, 205, 170, 190);
+    //Background
+    context.fillStyle = "grey";
+    context.fillRect(215, 205, 170, 190);
 
-  //Text
-  context.font = "40px Verdana";
-  context.fillStyle = "black";
-  context.fillText("STAGE", 220, 250);
-  context.fillText("CLEAR", 250, 285);
-  context.fillText("TRY", 230, 350);
-  context.fillText("NEXT", 270, 385);
+    //Text
+    context.font = "40px Verdana";
+    context.fillStyle = "black";
+    context.fillText("STAGE", 220, 250);
+    context.fillText("CLEAR", 250, 285);
+    context.fillText("TRY", 230, 350);
+    context.fillText("NEXT", 270, 385);
 }
 
 /**
  * Render the defeat screen
  */
 function renderDefeatScreen() {
-  //Outline
-  context.fillStyle = "black";
-  context.fillRect(210, 200, 180, 200);
+    //Outline
+    context.fillStyle = "black";
+    context.fillRect(210, 200, 180, 200);
 
-  //Background
-  context.fillStyle = "darkgrey";
-  context.fillRect(215, 205, 170, 190);
+    //Background
+    context.fillStyle = "darkgrey";
+    context.fillRect(215, 205, 170, 190);
 
-  //Text
-  context.font = "40px Verdana";
-  context.fillStyle = "black";
-  context.fillText("DEFEAT", 220, 250);
-  context.fillText("TRY", 220, 350);
-  context.fillText("AGAIN", 250, 385);
+    //Text
+    context.font = "40px Verdana";
+    context.fillStyle = "black";
+    context.fillText("DEFEAT", 220, 250);
+    context.fillText("TRY", 220, 350);
+    context.fillText("AGAIN", 250, 385);
 }
 
 /**
  * Render "start" with blinking
  */
 function renderStartText() {
-  if (Date.now() - showStartTimer > 500) {
-    showStartText = !showStartText;
-    showStartTimer = Date.now();
-  }
-  if (showStartText) {
-    context.font = "40px Verdana";
-    context.fillStyle = "white";
-    context.fillText("START", 240, 500);
-  }
+    if (Date.now() - showStartTimer > 500) {
+        showStartText = !showStartText;
+        showStartTimer = Date.now();
+    }
+    if (showStartText) {
+        context.font = "40px Verdana";
+        context.fillStyle = "white";
+        context.fillText("START", 240, 500);
+    }
 }
 
 /**
@@ -886,64 +887,64 @@ function renderStartText() {
  * @param {*} direction the direction of the medicine
  */
 function renderMedicine(x, y, color1, color2, direction) {
-  //First capsule
-  context.fillStyle = color1;
-  context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
+    //First capsule
+    context.fillStyle = color1;
+    context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
 
-  //Corners
-  switch (direction) {
-    case RIGHT:
-      renderTopLeftCorner(x, y, "grey");
-      renderBottomLeftCorner(x, y, "grey");
-      break;
+    //Corners
+    switch (direction) {
+        case RIGHT:
+            renderTopLeftCorner(x, y, "grey");
+            renderBottomLeftCorner(x, y, "grey");
+            break;
 
-    case LEFT:
-      renderBottomRightCorner(x, y, "grey");
-      renderTopRightCorner(x, y, "grey");
-      break;
+        case LEFT:
+            renderBottomRightCorner(x, y, "grey");
+            renderTopRightCorner(x, y, "grey");
+            break;
 
-    case BOTTOM:
-      renderTopLeftCorner(x, y, "grey");
-      renderTopRightCorner(x, y, "grey");
-      break;
+        case BOTTOM:
+            renderTopLeftCorner(x, y, "grey");
+            renderTopRightCorner(x, y, "grey");
+            break;
 
-    case TOP:
-      renderBottomLeftCorner(x, y, "grey");
-      renderBottomRightCorner(x, y, "grey");
-      break;
-  }
+        case TOP:
+            renderBottomLeftCorner(x, y, "grey");
+            renderBottomRightCorner(x, y, "grey");
+            break;
+    }
 
-  //Second capsule
-  context.fillStyle = color2;
-  switch (direction) {
-    case LEFT:
-      x -= BOX_WIDTH;
-      context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
-      renderTopLeftCorner(x, y, "grey");
-      renderBottomLeftCorner(x, y, "grey");
-      break;
+    //Second capsule
+    context.fillStyle = color2;
+    switch (direction) {
+        case LEFT:
+            x -= BOX_WIDTH;
+            context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
+            renderTopLeftCorner(x, y, "grey");
+            renderBottomLeftCorner(x, y, "grey");
+            break;
 
-    case RIGHT:
-      x += BOX_WIDTH;
-      context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
-      renderBottomRightCorner(x, y, "grey");
-      renderTopRightCorner(x, y, "grey");
-      break;
+        case RIGHT:
+            x += BOX_WIDTH;
+            context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
+            renderBottomRightCorner(x, y, "grey");
+            renderTopRightCorner(x, y, "grey");
+            break;
 
-    case BOTTOM:
-      y += BOX_HEIGHT;
-      context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
-      renderBottomLeftCorner(x, y, "grey");
-      renderBottomRightCorner(x, y, "grey");
-      break;
+        case BOTTOM:
+            y += BOX_HEIGHT;
+            context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
+            renderBottomLeftCorner(x, y, "grey");
+            renderBottomRightCorner(x, y, "grey");
+            break;
 
-    case TOP:
-      y -= BOX_HEIGHT;
-      context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
-      renderTopLeftCorner(x, y, "grey");
-      renderTopRightCorner(x, y, "grey");
-      break;
-  }
+        case TOP:
+            y -= BOX_HEIGHT;
+            context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
+            renderTopLeftCorner(x, y, "grey");
+            renderTopRightCorner(x, y, "grey");
+            break;
+    }
 }
 
 // ##########################################################################################
@@ -954,264 +955,264 @@ function renderMedicine(x, y, color1, color2, direction) {
  * Initialization of the game
  */
 function init() {
-  // Initizalisation of the global var context
-  context = document.getElementById("cvs").getContext("2d");
-  context.width = document.getElementById("cvs").width;
-  context.height = document.getElementById("cvs").height;
+    // Initizalisation of the global var context
+    context = document.getElementById("cvs").getContext("2d");
+    context.width = document.getElementById("cvs").width;
+    context.height = document.getElementById("cvs").height;
 
-  //Pause if it is not on focus
-  document.body.onblur = function() {
-    isOnFocus = false;
-  };
-  document.body.onfocus = function() {
-    isOnFocus = true;
-  };
+    //Pause if it is not on focus
+    document.body.onblur = function () {
+        isOnFocus = false;
+    };
+    document.body.onfocus = function () {
+        isOnFocus = true;
+    };
 
-  //Creation of the bottle
-  bottle = groundInitialization(bottle);
-  bottle = randomVirus(bottle, 4 * numLevel);
+    //Creation of the bottle
+    bottle = groundInitialization(bottle);
+    bottle = randomVirus(bottle, 4 * numLevel);
 
-  //Creation of the first medicine
-  nextMedicine = createMedicine(medicine);
-  medicine = createMedicine(medicine);
-  isMedicineFalling = true;
+    //Creation of the first medicine
+    nextMedicine = createMedicine(medicine);
+    medicine = createMedicine(medicine);
+    isMedicineFalling = true;
 
-  // 2 listeners on the keyboard (keyup and keydown)
-  document.addEventListener("keydown", captureKeyboardPress);
-  document.addEventListener("keyup", captureKeyboardReleased);
+    // 2 listeners on the keyboard (keyup and keydown)
+    document.addEventListener("keydown", captureKeyboardPress);
+    document.addEventListener("keyup", captureKeyboardReleased);
 
-  // Go my little game loop, and never stop
-  lastUpdate = Date.now();
-  lastRefresh = Date.now();
-  gameLoop();
+    // Go my little game loop, and never stop
+    lastUpdate = Date.now();
+    lastRefresh = Date.now();
+    gameLoop();
 }
 
 /**
  * Game loop
  */
 function gameLoop() {
-  if (!isOnFocus || isOnPause) {
-    document.title = "DrMario - en pause";
-    render();
-  } else {
-    document.title = "DrMario";
+    if (!isOnFocus || isOnPause) {
+        document.title = "DrMario - en pause";
+        render();
+    } else {
+        document.title = "DrMario";
 
-    if (!defeat && !victory) {
-      update();
+        if (!defeat && !victory) {
+            update();
+        }
+        // Draw the game
+        render();
     }
-    // Draw the game
-    render();
-  }
-  requestAnimationFrame(gameLoop);
+    requestAnimationFrame(gameLoop);
 }
 
 /**
  *  Game update
  */
 function update() {
-  // If we are not in the fall of the medicine
-  if (!isMedicineFalling) {
-    //
-    bottle = transferMedicineToGround(bottle, medicine);
+    // If we are not in the fall of the medicine
+    if (!isMedicineFalling) {
+        //
+        bottle = transferMedicineToGround(bottle, medicine);
 
-    //If capsules are still falling
-    if (gravityRecheck) {
-      //Let an delta = REFRESH_SPEED divided by 2 between two frames
-      if (Date.now() - lastRefresh > GRAVITY_SPEED) {
-        bottle = capsuleGravity(bottle);
-        lastRefresh = Date.now();
-      }
+        //If capsules are still falling
+        if (gravityRecheck) {
+            //Let an delta = REFRESH_SPEED divided by 2 between two frames
+            if (Date.now() - lastRefresh > GRAVITY_SPEED) {
+                bottle = capsuleGravity(bottle);
+                lastRefresh = Date.now();
+            }
 
-      //If capsules are not falling
+            //If capsules are not falling
+        } else {
+            //
+            bottle = detectColorMatching(bottle);
+
+            // Defeat
+            if (isDefeat()) {
+                defeat = true;
+
+                // Launch a new medicine
+            } else if (!gravityRecheck) {
+                medicine = copyMedicine(nextMedicine, medicine);
+                nextMedicine = createMedicine(nextMedicine);
+            }
+        }
+
+        //Falling of the medicine
     } else {
-      //
-      bottle = detectColorMatching(bottle);
-
-      // Defeat
-      if (isDefeat()) {
-        defeat = true;
-
-        // Launch a new medicine
-      } else if (!gravityRecheck) {
-        medicine = copyMedicine(nextMedicine, medicine);
-        nextMedicine = createMedicine(nextMedicine);
-      }
+        if (Date.now() - lastRefresh > REFRESH_SPEED) {
+            medicine = medicineFalling(medicine);
+            lastRefresh = Date.now();
+        }
     }
 
-    //Falling of the medicine
-  } else {
-    if (Date.now() - lastRefresh > REFRESH_SPEED) {
-      medicine = medicineFalling(medicine);
-      lastRefresh = Date.now();
+    //Victory ?
+    if (isVictory()) {
+        victory = true;
     }
-  }
-
-  //Victory ?
-  if (isVictory()) {
-    victory = true;
-  }
 }
 
 /**
  * Render the game state
  */
 function render() {
-  //Wiping the screen
-  context.fillStyle = "black";
-  context.fillRect(0, 0, context.width, context.height);
+    //Wiping the screen
+    context.fillStyle = "black";
+    context.fillRect(0, 0, context.width, context.height);
 
-  //Drawing the bottle
-  context.fillStyle = "white";
-  context.fillRect(
-    200,
-    140,
-    BOTTLE_WIDTH * BOX_WIDTH,
-    BOTTLE_HEIGHT * BOX_HEIGHT
-  );
-
-  //Draw the bottle's content
-  for (var i = 0; i < BOTTLE_HEIGHT; i++) {
-    for (var j = 0; j < BOTTLE_WIDTH; j++) {
-      context.fillStyle = "darkblue";
-      context.fillRect(200 + 25 * j, 140 + 25 * i, BOX_HEIGHT, BOX_WIDTH);
-
-      var x = 202 + BOX_WIDTH * j;
-      var y = 142 + BOX_HEIGHT * i;
-
-      switch (bottle[i][j].type) {
-        case 0:
-          context.fillStyle = "grey";
-          context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
-          break;
-
-        case VIRUS:
-          renderVirus(x, y, bottle[i][j].color);
-          break;
-
-        case CAPSULE:
-        case FALLING_CAPSULE:
-          context.fillStyle = bottle[i][j].color;
-          context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
-
-          //Corners
-          switch (bottle[i][j].attached) {
-            case RIGHT:
-              renderTopLeftCorner(x, y, "grey");
-              renderBottomLeftCorner(x, y, "grey");
-              break;
-
-            case LEFT:
-              renderTopRightCorner(x, y, "grey");
-              renderBottomRightCorner(x, y, "grey");
-              break;
-
-            case BOTTOM:
-              renderTopLeftCorner(x, y, "grey");
-              renderTopRightCorner(x, y, "grey");
-              break;
-
-            case TOP:
-              renderBottomLeftCorner(x, y, "grey");
-              renderBottomRightCorner(x, y, "grey");
-              break;
-
-            default:
-              renderTopLeftCorner(x, y, "grey");
-              renderTopRightCorner(x, y, "grey");
-              renderBottomLeftCorner(x, y, "grey");
-              renderBottomRightCorner(x, y, "grey");
-              break;
-          }
-          break;
-      }
-    }
-  }
-
-  //Draw the falling medicine
-  if (medicine.x >= 0) {
-    renderMedicine(
-      202 + BOX_WIDTH * medicine.x,
-      142 + BOX_HEIGHT * medicine.y,
-      medicine.color1,
-      medicine.color2,
-      medicine.direction
+    //Drawing the bottle
+    context.fillStyle = "white";
+    context.fillRect(
+        200,
+        140,
+        BOTTLE_WIDTH * BOX_WIDTH,
+        BOTTLE_HEIGHT * BOX_HEIGHT
     );
-  }
 
-  //Draw the next medicine
-  context.fillStyle = "grey";
-  context.fillRect(420, 170, 60, 30);
-  context.fillStyle = "black";
-  context.fillRect(448, 175, 4, 21);
-  renderMedicine(
-    427,
-    175,
-    nextMedicine.color1,
-    nextMedicine.color2,
-    nextMedicine.direction
-  );
+    //Draw the bottle's content
+    for (var i = 0; i < BOTTLE_HEIGHT; i++) {
+        for (var j = 0; j < BOTTLE_WIDTH; j++) {
+            context.fillStyle = "darkblue";
+            context.fillRect(200 + 25 * j, 140 + 25 * i, BOX_HEIGHT, BOX_WIDTH);
 
-  // Victory or defeat screen
-  if (victory) {
-    renderVictoryScreen();
-    renderStartText();
-  } else if (defeat) {
-    renderDefeatScreen();
-    renderStartText();
-  }
+            var x = 202 + BOX_WIDTH * j;
+            var y = 142 + BOX_HEIGHT * i;
+
+            switch (bottle[i][j].type) {
+                case 0:
+                    context.fillStyle = "grey";
+                    context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
+                    break;
+
+                case VIRUS:
+                    renderVirus(x, y, bottle[i][j].color);
+                    break;
+
+                case CAPSULE:
+                case FALLING_CAPSULE:
+                    context.fillStyle = bottle[i][j].color;
+                    context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
+
+                    //Corners
+                    switch (bottle[i][j].attached) {
+                        case RIGHT:
+                            renderTopLeftCorner(x, y, "grey");
+                            renderBottomLeftCorner(x, y, "grey");
+                            break;
+
+                        case LEFT:
+                            renderTopRightCorner(x, y, "grey");
+                            renderBottomRightCorner(x, y, "grey");
+                            break;
+
+                        case BOTTOM:
+                            renderTopLeftCorner(x, y, "grey");
+                            renderTopRightCorner(x, y, "grey");
+                            break;
+
+                        case TOP:
+                            renderBottomLeftCorner(x, y, "grey");
+                            renderBottomRightCorner(x, y, "grey");
+                            break;
+
+                        default:
+                            renderTopLeftCorner(x, y, "grey");
+                            renderTopRightCorner(x, y, "grey");
+                            renderBottomLeftCorner(x, y, "grey");
+                            renderBottomRightCorner(x, y, "grey");
+                            break;
+                    }
+                    break;
+            }
+        }
+    }
+
+    //Draw the falling medicine
+    if (medicine.x >= 0) {
+        renderMedicine(
+            202 + BOX_WIDTH * medicine.x,
+            142 + BOX_HEIGHT * medicine.y,
+            medicine.color1,
+            medicine.color2,
+            medicine.direction
+        );
+    }
+
+    //Draw the next medicine
+    context.fillStyle = "grey";
+    context.fillRect(420, 170, 60, 30);
+    context.fillStyle = "black";
+    context.fillRect(448, 175, 4, 21);
+    renderMedicine(
+        427,
+        175,
+        nextMedicine.color1,
+        nextMedicine.color2,
+        nextMedicine.direction
+    );
+
+    // Victory or defeat screen
+    if (victory) {
+        renderVictoryScreen();
+        renderStartText();
+    } else if (defeat) {
+        renderDefeatScreen();
+        renderStartText();
+    }
 }
 
 /**
  *  Key down event
  */
-captureKeyboardPress = function(event) {
-  switch (event.keyCode) {
-    // 'P' means pause or unpause
-    case 80:
-      isOnPause = !isOnPause;
-      break;
+captureKeyboardPress = function (event) {
+    switch (event.keyCode) {
+        // 'P' means pause or unpause
+        case 80:
+            isOnPause = !isOnPause;
+            break;
 
-    // Left arrow
-    case 37:
-      moveMedicineLeft();
-      break;
+        // Left arrow
+        case 37:
+            moveMedicineLeft();
+            break;
 
-    //Right arrow
-    case 39:
-      moveMedicineRight();
-      break;
+        //Right arrow
+        case 39:
+            moveMedicineRight();
+            break;
 
-    //Down arrow
-    case 40:
-      moveMedicineDown();
-      break;
+        //Down arrow
+        case 40:
+            moveMedicineDown();
+            break;
 
-    //Space bar
-    case 32:
-      rotateMedicine();
-      break;
+        //Space bar
+        case 32:
+            rotateMedicine();
+            break;
 
-    //Enter to play
-    case 13:
-      replayTheGame();
-      break;
+        //Enter to play
+        case 13:
+            replayTheGame();
+            break;
 
-    //'V' for victory                                   // BETA FUNCTION
-    case 86:
-      victory = !victory;
-      break;
+        //'V' for victory                                   // BETA FUNCTION
+        case 86:
+            victory = !victory;
+            break;
 
-    //'D' for defeat                                   // BETA FUNCTION
-    case 68:
-      defeat = !defeat;
-      break;
-  }
+        //'D' for defeat                                   // BETA FUNCTION
+        case 68:
+            defeat = !defeat;
+            break;
+    }
 };
 
 /**
  *  Key up event
  */
-captureKeyboardReleased = function(event) {
-  switch (event.keyCode) {
-  }
+captureKeyboardReleased = function (event) {
+    switch (event.keyCode) {
+    }
 };
