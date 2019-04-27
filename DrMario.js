@@ -19,6 +19,9 @@ var isMedicineFalling = false;
 var numLevel = 1;
 var victory = false;
 var defeat = false;
+var topScore = 10000;
+var playerScore = 0;
+var levelNumberOfVirus = 1;
 
 //Rendering variables
 var showStartTimer = 0;
@@ -35,6 +38,8 @@ const EMPTY_BOX = {
 
 // Coloration variables
 const COLORS = ["blue", "red", "yellow"];
+const BACKGROUND_COLOR = "grey";
+const BORDERS_COLOR = "darkblue";
 
 // Miscellaneous
 const BOX_WIDTH = 25;
@@ -80,7 +85,7 @@ var nextMedicine = {
  * @return true if the player wins
  */
 function isVictory() {
-    return remainingVirusNumber(bottle) == 0;
+    return countRemainingVirusNumber(bottle) == 0;
 }
 
 /**
@@ -100,15 +105,15 @@ function replayTheGame() {
         victory = false;
         isMedicineFalling = true;
 
-        bottle = groundInitialization(bottle);
+        bottle = bottleInitialization(bottle);
         bottle = randomVirus(bottle, 4 * numLevel);
 
         medicine = createMedicine(medicine);
     } else if (defeat) {
         defeat = false;
-        //playerScore = 0;
-        //numVirus =
-        bottle = groundInitialization(bottle);
+        playerScore = 0;
+        
+        bottle = bottleInitialization(bottle);
         bottle = randomVirus(bottle, 4 * numLevel);
 
         medicine = createMedicine(medicine);
@@ -123,11 +128,11 @@ function randomColor() {
 }
 
 /**
- * Create an empty ground
+ * Create an empty bottle
  * @param {*} matrice the matrice you want to make empty
  * @return an empty matrice
  */
-function groundInitialization(matrice) {
+function bottleInitialization(matrice) {
     for (var i = 0; i < BOTTLE_HEIGHT; i++) {
         var line = [];
         for (var j = 0; j < BOTTLE_WIDTH; j++) {
@@ -139,14 +144,14 @@ function groundInitialization(matrice) {
 }
 
 /**
- * Fill the ground with randomly generated virus with random colors
+ * Fill the bottle with randomly generated virus with random colors
  * @param {*} matrice the matrice which will be filled
  * @param {*} numberOfVirus the number of virus which need to be created
  * @return the matrice with the virus
  */
 function randomVirus(matrice, numberOfVirus) {
     var actualNumberOfVirus = 0;
-    while (actualNumberOfVirus < numberOfVirus && !isGroundFilled(matrice)) {
+    while (actualNumberOfVirus < numberOfVirus && !isBottleFilled(matrice)) {
         var randomLine = -1;
         var randomColumn = -1;
 
@@ -155,7 +160,7 @@ function randomVirus(matrice, numberOfVirus) {
             randomColumn = Math.floor(Math.random() * BOTTLE_WIDTH);
         } while (
             matrice[randomLine][randomColumn].type !== 0 &&
-            !isGroundFilled(matrice)
+            !isBottleFilled(matrice)
         );
 
         if (randomLine >= 0 && randomColumn >= 0) {
@@ -165,16 +170,16 @@ function randomVirus(matrice, numberOfVirus) {
             actualNumberOfVirus++;
         }
     }
-
+    levelNumberOfVirus = numberOfVirus;
     return matrice;
 }
 
 /**
- * Check if the ground is filled
+ * Check if the bottle is filled
  * @param {*} matrice
  * @return true if it is
  */
-function isGroundFilled(matrice) {
+function isBottleFilled(matrice) {
     var existOneEmptyBox = false;
     var i = 4;
     var j = 0;
@@ -193,10 +198,10 @@ function isGroundFilled(matrice) {
 
 /**
  * Count the number of remaining virus
- * @param {*} matrice the ground
+ * @param {*} matrice the bottle
  * @return the number of remaining virus
  */
-function remainingVirusNumber(matrice) {
+function countRemainingVirusNumber(matrice) {
     var virusNumber = 0;
 
     for (var i = 0; i < BOTTLE_HEIGHT; i++) {
@@ -212,7 +217,7 @@ function remainingVirusNumber(matrice) {
 
 /**
  * Detect 4-wide alignement of virus and capsules with the same color and destroy them.
- * @param {*} matrice the ground in an 2-dim array
+ * @param {*} matrice the bottle in an 2-dim array
  */
 function detectColorMatching(matrice) {
     //vertical
@@ -279,7 +284,7 @@ function detectColorMatching(matrice) {
                         }
                         //Destroy
                         matrice[y][j] = JSON.parse(JSON.stringify(EMPTY_BOX));
-
+                        
                         gravityRecheck = true;
                     }
                 }
@@ -345,6 +350,7 @@ function detectColorMatching(matrice) {
                                 break;
                         }
                         matrice[i][x] = JSON.parse(JSON.stringify(EMPTY_BOX));
+                        
                         gravityRecheck = true;
                     }
                 }
@@ -359,8 +365,8 @@ function detectColorMatching(matrice) {
 
 /**
  * Make the capsules fall if there is nothing under them
- * @param {*} matrice the ground
- * @return the updated ground
+ * @param {*} matrice the bottle
+ * @return the updated bottle
  */
 function capsuleGravity(matrice) {
     gravityRecheck = false;
@@ -496,11 +502,11 @@ function medicineFalling(med) {
 
 /**
  * Does exactly what you expect & reset the medicine var
- * @param {*} matrice the matrice you want to transfer in
+ * @param {*} matrice the bottle you want to transfer in
  * @param {*} med the medicine you want to transfer
- * @return the updated matrice
+ * @return the updated bottle
  */
-function transferMedicineToGround(matrice, med) {
+function transferMedicineToBottle(matrice, med) {
     if (med.x != -1) {
         matrice[med.y][med.x].type = CAPSULE;
         matrice[med.y][med.x].color = med.color1;
@@ -816,10 +822,10 @@ function renderVirus(x, y, color) {
     context.fillRect(x + 15, y + 15, 3, 3);
 
     //Corners
-    renderTopLeftCorner(x, y, "grey");
-    renderTopRightCorner(x, y, "grey");
-    renderBottomLeftCorner(x, y, "grey");
-    renderBottomRightCorner(x, y, "grey");
+    renderTopLeftCorner(x, y, BACKGROUND_COLOR);
+    renderTopRightCorner(x, y, BACKGROUND_COLOR);
+    renderBottomLeftCorner(x, y, BACKGROUND_COLOR);
+    renderBottomRightCorner(x, y, BACKGROUND_COLOR);
 }
 
 /**
@@ -831,7 +837,7 @@ function renderVictoryScreen() {
     context.fillRect(210, 200, 180, 200);
 
     //Background
-    context.fillStyle = "grey";
+    context.fillStyle = BACKGROUND_COLOR;
     context.fillRect(215, 205, 170, 190);
 
     //Text
@@ -861,6 +867,25 @@ function renderDefeatScreen() {
     context.fillText("DEFEAT", 220, 250);
     context.fillText("TRY", 220, 350);
     context.fillText("AGAIN", 250, 385);
+}
+
+
+/**
+ * Render the score panel
+ */
+function renderScorePanel() {
+    context.fillStyle = BORDERS_COLOR;
+    context.fillRect(70,140,104,104);
+    context.fillStyle = BACKGROUND_COLOR;
+    context.fillRect(72, 142, 100, 100);
+
+    context.fillStyle = "black";
+    context.font = "bold 25px Arial"
+    context.fillText("TOP : ",77,167,90);
+    context.fillText(topScore,77,189,90);
+
+    context.fillText("SCORE : ",77,217,90);
+    context.fillText(playerScore,77,237,90);
 }
 
 /**
@@ -894,23 +919,23 @@ function renderMedicine(x, y, color1, color2, direction) {
     //Corners
     switch (direction) {
         case RIGHT:
-            renderTopLeftCorner(x, y, "grey");
-            renderBottomLeftCorner(x, y, "grey");
+            renderTopLeftCorner(x, y, BACKGROUND_COLOR);
+            renderBottomLeftCorner(x, y, BACKGROUND_COLOR);
             break;
 
         case LEFT:
-            renderBottomRightCorner(x, y, "grey");
-            renderTopRightCorner(x, y, "grey");
+            renderBottomRightCorner(x, y, BACKGROUND_COLOR);
+            renderTopRightCorner(x, y, BACKGROUND_COLOR);
             break;
 
         case BOTTOM:
-            renderTopLeftCorner(x, y, "grey");
-            renderTopRightCorner(x, y, "grey");
+            renderTopLeftCorner(x, y, BACKGROUND_COLOR);
+            renderTopRightCorner(x, y, BACKGROUND_COLOR);
             break;
 
         case TOP:
-            renderBottomLeftCorner(x, y, "grey");
-            renderBottomRightCorner(x, y, "grey");
+            renderBottomLeftCorner(x, y, BACKGROUND_COLOR);
+            renderBottomRightCorner(x, y, BACKGROUND_COLOR);
             break;
     }
 
@@ -920,29 +945,29 @@ function renderMedicine(x, y, color1, color2, direction) {
         case LEFT:
             x -= BOX_WIDTH;
             context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
-            renderTopLeftCorner(x, y, "grey");
-            renderBottomLeftCorner(x, y, "grey");
+            renderTopLeftCorner(x, y, BACKGROUND_COLOR);
+            renderBottomLeftCorner(x, y, BACKGROUND_COLOR);
             break;
 
         case RIGHT:
             x += BOX_WIDTH;
             context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
-            renderBottomRightCorner(x, y, "grey");
-            renderTopRightCorner(x, y, "grey");
+            renderBottomRightCorner(x, y, BACKGROUND_COLOR);
+            renderTopRightCorner(x, y, BACKGROUND_COLOR);
             break;
 
         case BOTTOM:
             y += BOX_HEIGHT;
             context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
-            renderBottomLeftCorner(x, y, "grey");
-            renderBottomRightCorner(x, y, "grey");
+            renderBottomLeftCorner(x, y, BACKGROUND_COLOR);
+            renderBottomRightCorner(x, y, BACKGROUND_COLOR);
             break;
 
         case TOP:
             y -= BOX_HEIGHT;
             context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
-            renderTopLeftCorner(x, y, "grey");
-            renderTopRightCorner(x, y, "grey");
+            renderTopLeftCorner(x, y, BACKGROUND_COLOR);
+            renderTopRightCorner(x, y, BACKGROUND_COLOR);
             break;
     }
 }
@@ -969,7 +994,7 @@ function init() {
     };
 
     //Creation of the bottle
-    bottle = groundInitialization(bottle);
+    bottle = bottleInitialization(bottle);
     bottle = randomVirus(bottle, 4 * numLevel);
 
     //Creation of the first medicine
@@ -1010,14 +1035,16 @@ function gameLoop() {
  *  Game update
  */
 function update() {
+    let beginningNumberOfVirus = levelNumberOfVirus;
+
     // If we are not in the fall of the medicine
     if (!isMedicineFalling) {
         //
-        bottle = transferMedicineToGround(bottle, medicine);
+        bottle = transferMedicineToBottle(bottle, medicine);
 
         //If capsules are still falling
         if (gravityRecheck) {
-            //Let an delta = REFRESH_SPEED divided by 2 between two frames
+            //Let GRAVITY_SPEED time between two frames
             if (Date.now() - lastRefresh > GRAVITY_SPEED) {
                 bottle = capsuleGravity(bottle);
                 lastRefresh = Date.now();
@@ -1025,7 +1052,7 @@ function update() {
 
             //If capsules are not falling
         } else {
-            //
+            //Destroy
             bottle = detectColorMatching(bottle);
 
             // Defeat
@@ -1047,6 +1074,14 @@ function update() {
         }
     }
 
+    //Updating score && topScore
+    levelNumberOfVirus = countRemainingVirusNumber(bottle);
+    playerScore += (beginningNumberOfVirus - levelNumberOfVirus)*200;
+
+    if(topScore < playerScore){
+        topScore = playerScore;
+    }
+
     //Victory ?
     if (isVictory()) {
         victory = true;
@@ -1061,6 +1096,9 @@ function render() {
     context.fillStyle = "black";
     context.fillRect(0, 0, context.width, context.height);
 
+    //Render the different panels
+    renderScorePanel();
+
     //Drawing the bottle
     context.fillStyle = "white";
     context.fillRect(
@@ -1073,7 +1111,7 @@ function render() {
     //Draw the bottle's content
     for (var i = 0; i < BOTTLE_HEIGHT; i++) {
         for (var j = 0; j < BOTTLE_WIDTH; j++) {
-            context.fillStyle = "darkblue";
+            context.fillStyle = BORDERS_COLOR ;
             context.fillRect(200 + 25 * j, 140 + 25 * i, BOX_HEIGHT, BOX_WIDTH);
 
             var x = 202 + BOX_WIDTH * j;
@@ -1081,7 +1119,7 @@ function render() {
 
             switch (bottle[i][j].type) {
                 case 0:
-                    context.fillStyle = "grey";
+                    context.fillStyle = BACKGROUND_COLOR;
                     context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
                     break;
 
@@ -1097,30 +1135,30 @@ function render() {
                     //Corners
                     switch (bottle[i][j].attached) {
                         case RIGHT:
-                            renderTopLeftCorner(x, y, "grey");
-                            renderBottomLeftCorner(x, y, "grey");
+                            renderTopLeftCorner(x, y, BACKGROUND_COLOR);
+                            renderBottomLeftCorner(x, y, BACKGROUND_COLOR);
                             break;
 
                         case LEFT:
-                            renderTopRightCorner(x, y, "grey");
-                            renderBottomRightCorner(x, y, "grey");
+                            renderTopRightCorner(x, y, BACKGROUND_COLOR);
+                            renderBottomRightCorner(x, y, BACKGROUND_COLOR);
                             break;
 
                         case BOTTOM:
-                            renderTopLeftCorner(x, y, "grey");
-                            renderTopRightCorner(x, y, "grey");
+                            renderTopLeftCorner(x, y, BACKGROUND_COLOR);
+                            renderTopRightCorner(x, y, BACKGROUND_COLOR);
                             break;
 
                         case TOP:
-                            renderBottomLeftCorner(x, y, "grey");
-                            renderBottomRightCorner(x, y, "grey");
+                            renderBottomLeftCorner(x, y, BACKGROUND_COLOR);
+                            renderBottomRightCorner(x, y, BACKGROUND_COLOR);
                             break;
 
                         default:
-                            renderTopLeftCorner(x, y, "grey");
-                            renderTopRightCorner(x, y, "grey");
-                            renderBottomLeftCorner(x, y, "grey");
-                            renderBottomRightCorner(x, y, "grey");
+                            renderTopLeftCorner(x, y, BACKGROUND_COLOR);
+                            renderTopRightCorner(x, y, BACKGROUND_COLOR);
+                            renderBottomLeftCorner(x, y, BACKGROUND_COLOR);
+                            renderBottomRightCorner(x, y, BACKGROUND_COLOR);
                             break;
                     }
                     break;
@@ -1140,7 +1178,7 @@ function render() {
     }
 
     //Draw the next medicine
-    context.fillStyle = "grey";
+    context.fillStyle = BACKGROUND_COLOR;
     context.fillRect(420, 170, 60, 30);
     context.fillStyle = "black";
     context.fillRect(448, 175, 4, 21);
@@ -1195,16 +1233,6 @@ captureKeyboardPress = function (event) {
         //Enter to play
         case 13:
             replayTheGame();
-            break;
-
-        //'V' for victory                                   // BETA FUNCTION
-        case 86:
-            victory = !victory;
-            break;
-
-        //'D' for defeat                                   // BETA FUNCTION
-        case 68:
-            defeat = !defeat;
             break;
     }
 };
