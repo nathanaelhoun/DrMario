@@ -225,7 +225,7 @@ function detectColorMatching(matrice) {
     do {
         isVerticalMatchingFound = false;
         var i = 15;
-        while (i >= 0 && !isVerticalMatchingFound) {
+        while (i >= 3 && !isVerticalMatchingFound) {
             var j = 0;
             while (j < 8 && !isVerticalMatchingFound) {
                 if (bottle[i][j].type != 0) {
@@ -679,7 +679,7 @@ function moveMedicineRight() {
  * Check if we can rotate the medicine (and do if it is possible)
  */
 function rotateMedicine() {
-    if (medicine.x != -1) {
+    if (medicine.y > 0) {
         var isMoveAllowed = true;
         var newdirection = medicine.direction - 1;
         if (newdirection < 0) {
@@ -1095,24 +1095,23 @@ function update() {
                 lastRefresh = Date.now();
             }
 
-            //If capsules are not falling
+        //If capsules are not falling
         } else {
-            //Destroy
+            //Destroy aligments if they exist
             bottle = detectColorMatching(bottle);
-            console.log("Match detected and resolved");
 
-            // Defeat
+            // Detect the defeat
             if (isDefeat()) {
                 defeat = true;
 
-                // Launch a new medicine
+            // Or launch a new medicine
             } else if (!gravityRecheck) {
                 medicine = copyMedicine(nextMedicine, medicine);
                 nextMedicine = createMedicine(nextMedicine);
             }
         }
 
-        //Falling of the medicine
+    // Make the medicine fall
     } else {
         if (Date.now() - lastRefresh > REFRESH_SPEED) {
             medicine = medicineFalling(medicine);
