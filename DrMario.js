@@ -51,7 +51,7 @@ const VIRUS = 1;
 const CAPSULE = 2;
 const FALLING_CAPSULE = 3;
 
-const REFRESH_SPEED = 1000;
+var REFRESH_SPEED = 1000;
 const GRAVITY_SPEED = 300;
 
 // Medicines
@@ -260,31 +260,31 @@ function detectColorMatching(matrice) {
                             matrice[y][j] = JSON.parse(JSON.stringify(EMPTY_BOX));
 
                             y--;
-                        } while (y>0 && matrice[y][j].color == matrice[y - 1][j].color);
+                        } while (y > 0 && matrice[y][j].color == matrice[y - 1][j].color);
 
                         //Un-attach the last attached part
-                        if(y>=0){
+                        if (y >= 0) {
                             switch (matrice[y][j].attached) {
                                 case RIGHT:
                                     matrice[y][j + 1].attached = -1;
                                     break;
-    
+
                                 case TOP:
                                     matrice[y - 1][j].attached = -1;
                                     break;
-    
+
                                 case LEFT:
                                     matrice[y][j - 1].attached = -1;
                                     break;
-    
+
                                 case BOTTOM:
                                     matrice[y + 1][j].attached = -1;
                                     break;
                             }
                             //Destroy
                             matrice[y][j] = JSON.parse(JSON.stringify(EMPTY_BOX));
-    
-                            gravityRecheck = true;    
+
+                            gravityRecheck = true;
                         }
                     }
                 }
@@ -842,6 +842,18 @@ function renderMenuScreen() {
     context.fillStyle = "black";
     context.fillText("DR", 220, 250, 160);
     context.fillText("MARIO", 250, 285, 130);
+
+    //Choose speed
+    renderEmptyPanel(200, 350, 200, 100, BORDERS_COLOR);
+    context.fillStyle = BORDERS_COLOR;
+    context.fillRect(225, 400, 150, 6);
+    for (var i = 0; i < 3; i++) {
+        var tickBoxColor = "black";
+        if (REFRESH_SPEED == 1000 - i * 300) {
+            tickBoxColor = "lightblue";
+        }
+        renderEmptyPanel(243 + i * 50, 396, 10, 10, tickBoxColor);
+    }
 }
 
 /**
@@ -891,9 +903,10 @@ function renderDefeatScreen() {
  * @param int y the y coordinate of the panel
  * @param int width of the panel
  * @param int height of the panel
+ * @param String color the color of the border
  */
-function renderEmptyPanel(x, y, width, height) {
-    context.fillStyle = BORDERS_COLOR;
+function renderEmptyPanel(x, y, width, height, color) {
+    context.fillStyle = color;
     context.fillRect(x, y, width + 4, height + 4);
     context.fillStyle = BACKGROUND_COLOR;
     context.fillRect(x + 2, y + 2, width, height);
@@ -903,7 +916,7 @@ function renderEmptyPanel(x, y, width, height) {
  * Render the score panel
  */
 function renderScorePanel() {
-    renderEmptyPanel(70, 140, 100, 100);
+    renderEmptyPanel(70, 140, 100, 100, BORDERS_COLOR);
 
     context.fillStyle = "black";
     context.font = "bold 25px Arial"
@@ -918,7 +931,7 @@ function renderScorePanel() {
  * Render information panel
  */
 function renderInformationPanel() {
-    renderEmptyPanel(425, 300, 100, 200);
+    renderEmptyPanel(425, 300, 100, 200, BORDERS_COLOR);
 
     context.fillStyle = "black";
     context.font = "bold 25px Arial"
@@ -927,7 +940,22 @@ function renderInformationPanel() {
     context.fillText(numLevel, 472, 357, 50);
     // Level speed
     context.fillText("SPEED ", 432, 397, 90);
-    context.fillText("So low", 432, 422, 90);
+    let speedText = "";
+    switch (REFRESH_SPEED) {
+        case 1000:
+            speedText = "LOW";
+            break;
+        case 700:
+            speedText = "MED";
+            break;
+        case 400:
+            speedText = "HIG";
+            break;
+
+        default:
+            speedText = "oh wait"
+    }
+    context.fillText(speedText, 432, 422, 90);
     // Number of virus
     context.fillText("VIRUS ", 432, 462, 90);
     context.fillText(levelNumberOfVirus, 472, 487, 50);
@@ -1096,7 +1124,7 @@ function update() {
                 lastRefresh = Date.now();
             }
 
-        //If capsules are not falling
+            //If capsules are not falling
         } else {
             //Destroy aligments if they exist
             bottle = detectColorMatching(bottle);
@@ -1105,14 +1133,14 @@ function update() {
             if (isDefeat()) {
                 defeat = true;
 
-            // Or launch a new medicine
+                // Or launch a new medicine
             } else if (!gravityRecheck) {
                 medicine = copyMedicine(nextMedicine, medicine);
                 nextMedicine = createMedicine(nextMedicine);
             }
         }
 
-    // Make the medicine fall
+        // Make the medicine fall
     } else {
         if (Date.now() - lastRefresh > REFRESH_SPEED) {
             medicine = medicineFalling(medicine);
@@ -1154,7 +1182,8 @@ function render() {
         renderScorePanel();
         renderInformationPanel();
         //Next medicine panel
-        renderEmptyPanel(425, 170, 100, 100);
+        renderEmptyPanel(425, 170, 100, 100, BORDERS_COLOR);
+
 
         context.fillStyle = "black";
         context.fillRect(473, 212, 4, 21);
@@ -1262,11 +1291,25 @@ captureKeyboardPress = function (event) {
 
         // Left arrow
         case 37:
+            if (numLevel == 0) {
+                if (REFRESH_SPEED == 400) {
+                    REFRESH_SPEED = 700;
+                } else if (REFRESH_SPEED == 700) {
+                    REFRESH_SPEED = 1000;
+                }
+            }
             moveMedicineLeft();
             break;
 
         //Right arrow
         case 39:
+            if (numLevel == 0) {
+                if (REFRESH_SPEED == 1000) {
+                    REFRESH_SPEED = 700;
+                } else if (REFRESH_SPEED == 700) {
+                    REFRESH_SPEED = 400;
+                }
+            }
             moveMedicineRight();
             break;
 
@@ -1284,6 +1327,8 @@ captureKeyboardPress = function (event) {
         case 13:
             if (numLevel == 0) {
                 numLevel = 1;
+                medicine = createMedicine();
+                lastRefresh = Date.now();
             } else {
                 replayTheGame();
             }
