@@ -16,7 +16,7 @@ var isOnPause = false;
 var gravityRecheck = false;
 var isMedicineFalling = false;
 
-var numLevel = 1;
+var numLevel = 0;
 var victory = false;
 var defeat = false;
 var topScore = 10000;
@@ -225,15 +225,14 @@ function detectColorMatching(matrice) {
     do {
         isVerticalMatchingFound = false;
         var i = 15;
-        while (i >= 3 && !isVerticalMatchingFound) {
+        while (i >= 0 && !isVerticalMatchingFound) {
             var j = 0;
             while (j < 8 && !isVerticalMatchingFound) {
                 if (bottle[i][j].type != 0) {
                     if (
                         matrice[i][j].color == matrice[i - 1][j].color &&
                         matrice[i][j].color == matrice[i - 2][j].color &&
-                        matrice[i][j].color == matrice[i - 3][j].color
-                    ) {
+                        matrice[i][j].color == matrice[i - 3][j].color) {
                         isVerticalMatchingFound = true;
 
                         //Destroy
@@ -310,7 +309,7 @@ function detectColorMatching(matrice) {
                     ) {
                         isHorizontalMatchingFound = true;
                         var x = j;
-                        while (matrice[i][x].color == matrice[i][x + 1].color) {
+                        while (x < 7 && matrice[i][x].color == matrice[i][x + 1].color) {
                             switch (matrice[i][x].attached) {
                                 case RIGHT:
                                     matrice[i][x + 1].attached = -1;
@@ -332,22 +331,25 @@ function detectColorMatching(matrice) {
                             x++;
                         }
 
-                        switch (matrice[i][x].attached) {
-                            case RIGHT:
-                                matrice[i][x + 1].attached = -1;
-                                break;
+                        //Delete the last one
+                        if (x < 8) {
+                            switch (matrice[i][x].attached) {
+                                case RIGHT:
+                                    matrice[i][x + 1].attached = -1;
+                                    break;
 
-                            case TOP:
-                                matrice[i - 1][x].attached = -1;
-                                break;
+                                case TOP:
+                                    matrice[i - 1][x].attached = -1;
+                                    break;
 
-                            case LEFT:
-                                matrice[i][x - 1].attached = -1;
-                                break;
+                                case LEFT:
+                                    matrice[i][x - 1].attached = -1;
+                                    break;
 
-                            case BOTTOM:
-                                matrice[i + 1][x].attached = -1;
-                                break;
+                                case BOTTOM:
+                                    matrice[i + 1][x].attached = -1;
+                                    break;
+                            }
                         }
                         matrice[i][x] = JSON.parse(JSON.stringify(EMPTY_BOX));
 
@@ -829,6 +831,19 @@ function renderVirus(x, y, color) {
 }
 
 /**
+ * Render the menu screen
+ */
+function renderMenuScreen() {
+    context.fillStyle = BACKGROUND_COLOR;
+    context.fillRect(215, 205, 170, 190);
+
+    context.font = "40px Verdana";
+    context.fillStyle = "black";
+    context.fillText("DR", 220, 250, 160);
+    context.fillText("MARIO", 250, 285, 130);
+}
+
+/**
  * Render the victory screen
  */
 function renderVictoryScreen() {
@@ -1023,9 +1038,9 @@ function init() {
         isOnFocus = true;
     };
 
-    //Creation of the bottle
+    //Creation of the bottle with 4 viruses
     bottle = bottleInitialization(bottle);
-    bottle = randomVirus(bottle, 4 * numLevel);
+    bottle = randomVirus(bottle, 4);
 
     //Creation of the first medicine
     nextMedicine = createMedicine(medicine);
@@ -1052,7 +1067,7 @@ function gameLoop() {
     } else {
         document.title = "DrMario";
 
-        if (!defeat && !victory) {
+        if (!defeat && !victory && numLevel != 0) {
             update();
         }
         // Draw the game
@@ -1084,6 +1099,7 @@ function update() {
         } else {
             //Destroy
             bottle = detectColorMatching(bottle);
+            console.log("Match detected and resolved");
 
             // Defeat
             if (isDefeat()) {
@@ -1118,6 +1134,7 @@ function update() {
     }
 }
 
+
 /**
  * Render the game state
  */
@@ -1126,102 +1143,110 @@ function render() {
     context.fillStyle = "black";
     context.fillRect(0, 0, context.width, context.height);
 
-    //Render the different panels
-    renderScorePanel();
-    renderInformationPanel();
-    //Next medicine panel
-    renderEmptyPanel(425, 170, 100, 100);
+    //Menu
+    if (numLevel == 0) {
+        renderMenuScreen();
+        renderStartText();
 
-    context.fillStyle = "black";
-    context.fillRect(473, 212, 4, 21);
-    renderMedicine(452, 212, nextMedicine.color1, nextMedicine.color2, nextMedicine.direction);
+        //Or game
+    } else {
+        //Render the different panels
+        renderScorePanel();
+        renderInformationPanel();
+        //Next medicine panel
+        renderEmptyPanel(425, 170, 100, 100);
+
+        context.fillStyle = "black";
+        context.fillRect(473, 212, 4, 21);
+        renderMedicine(452, 212, nextMedicine.color1, nextMedicine.color2, nextMedicine.direction);
 
 
-    //Drawing the bottle
-    context.fillStyle = BORDERS_COLOR;
-    context.fillRect(190, 130, 220, 420);
-    context.fillStyle = BACKGROUND_COLOR;
-    context.fillRect(193, 133, 214, 414);
-    context.fillStyle = BORDERS_COLOR;
-    context.fillRect(197, 137, 206, 406);
+        //Drawing the bottle
+        context.fillStyle = BORDERS_COLOR;
+        context.fillRect(190, 130, 220, 420);
+        context.fillStyle = BACKGROUND_COLOR;
+        context.fillRect(193, 133, 214, 414);
+        context.fillStyle = BORDERS_COLOR;
+        context.fillRect(197, 137, 206, 406);
 
-    //Draw the bottle's content
-    for (var i = 0; i < BOTTLE_HEIGHT; i++) {
-        for (var j = 0; j < BOTTLE_WIDTH; j++) {
-            context.fillStyle = BORDERS_COLOR;
-            context.fillRect(200 + 25 * j, 140 + 25 * i, BOX_HEIGHT, BOX_WIDTH);
+        //Draw the bottle's content
+        for (var i = 0; i < BOTTLE_HEIGHT; i++) {
+            for (var j = 0; j < BOTTLE_WIDTH; j++) {
+                context.fillStyle = BORDERS_COLOR;
+                context.fillRect(200 + 25 * j, 140 + 25 * i, BOX_HEIGHT, BOX_WIDTH);
 
-            var x = 202 + BOX_WIDTH * j;
-            var y = 142 + BOX_HEIGHT * i;
+                var x = 202 + BOX_WIDTH * j;
+                var y = 142 + BOX_HEIGHT * i;
 
-            switch (bottle[i][j].type) {
-                case 0:
-                    context.fillStyle = BACKGROUND_COLOR;
-                    context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
-                    break;
+                switch (bottle[i][j].type) {
+                    case 0:
+                        context.fillStyle = BACKGROUND_COLOR;
+                        context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
+                        break;
 
-                case VIRUS:
-                    renderVirus(x, y, bottle[i][j].color);
-                    break;
+                    case VIRUS:
+                        renderVirus(x, y, bottle[i][j].color);
+                        break;
 
-                case CAPSULE:
-                case FALLING_CAPSULE:
-                    context.fillStyle = bottle[i][j].color;
-                    context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
+                    case CAPSULE:
+                    case FALLING_CAPSULE:
+                        context.fillStyle = bottle[i][j].color;
+                        context.fillRect(x, y, BOX_HEIGHT - 4, BOX_WIDTH - 4);
 
-                    //Corners
-                    switch (bottle[i][j].attached) {
-                        case RIGHT:
-                            renderTopLeftCorner(x, y, BACKGROUND_COLOR);
-                            renderBottomLeftCorner(x, y, BACKGROUND_COLOR);
-                            break;
+                        //Corners
+                        switch (bottle[i][j].attached) {
+                            case RIGHT:
+                                renderTopLeftCorner(x, y, BACKGROUND_COLOR);
+                                renderBottomLeftCorner(x, y, BACKGROUND_COLOR);
+                                break;
 
-                        case LEFT:
-                            renderTopRightCorner(x, y, BACKGROUND_COLOR);
-                            renderBottomRightCorner(x, y, BACKGROUND_COLOR);
-                            break;
+                            case LEFT:
+                                renderTopRightCorner(x, y, BACKGROUND_COLOR);
+                                renderBottomRightCorner(x, y, BACKGROUND_COLOR);
+                                break;
 
-                        case BOTTOM:
-                            renderTopLeftCorner(x, y, BACKGROUND_COLOR);
-                            renderTopRightCorner(x, y, BACKGROUND_COLOR);
-                            break;
+                            case BOTTOM:
+                                renderTopLeftCorner(x, y, BACKGROUND_COLOR);
+                                renderTopRightCorner(x, y, BACKGROUND_COLOR);
+                                break;
 
-                        case TOP:
-                            renderBottomLeftCorner(x, y, BACKGROUND_COLOR);
-                            renderBottomRightCorner(x, y, BACKGROUND_COLOR);
-                            break;
+                            case TOP:
+                                renderBottomLeftCorner(x, y, BACKGROUND_COLOR);
+                                renderBottomRightCorner(x, y, BACKGROUND_COLOR);
+                                break;
 
-                        default:
-                            renderTopLeftCorner(x, y, BACKGROUND_COLOR);
-                            renderTopRightCorner(x, y, BACKGROUND_COLOR);
-                            renderBottomLeftCorner(x, y, BACKGROUND_COLOR);
-                            renderBottomRightCorner(x, y, BACKGROUND_COLOR);
-                            break;
-                    }
-                    break;
+                            default:
+                                renderTopLeftCorner(x, y, BACKGROUND_COLOR);
+                                renderTopRightCorner(x, y, BACKGROUND_COLOR);
+                                renderBottomLeftCorner(x, y, BACKGROUND_COLOR);
+                                renderBottomRightCorner(x, y, BACKGROUND_COLOR);
+                                break;
+                        }
+                        break;
+                }
             }
         }
-    }
 
-    //Draw the falling medicine
-    if (medicine.x >= 0) {
-        renderMedicine(
-            202 + BOX_WIDTH * medicine.x,
-            142 + BOX_HEIGHT * medicine.y,
-            medicine.color1,
-            medicine.color2,
-            medicine.direction
-        );
-    }
+        //Draw the falling medicine
+        if (medicine.x >= 0) {
+            renderMedicine(
+                202 + BOX_WIDTH * medicine.x,
+                142 + BOX_HEIGHT * medicine.y,
+                medicine.color1,
+                medicine.color2,
+                medicine.direction
+            );
+        }
 
 
-    // Victory or defeat screen
-    if (victory) {
-        renderVictoryScreen();
-        renderStartText();
-    } else if (defeat) {
-        renderDefeatScreen();
-        renderStartText();
+        // Victory or defeat screen
+        if (victory) {
+            renderVictoryScreen();
+            renderStartText();
+        } else if (defeat) {
+            renderDefeatScreen();
+            renderStartText();
+        }
     }
 }
 
@@ -1257,7 +1282,11 @@ captureKeyboardPress = function (event) {
 
         //Enter to play
         case 13:
-            replayTheGame();
+            if (numLevel == 0) {
+                numLevel = 1;
+            } else {
+                replayTheGame();
+            }
             break;
     }
 };
