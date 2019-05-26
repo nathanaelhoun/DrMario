@@ -260,31 +260,32 @@ function detectColorMatching(matrice) {
                             matrice[y][j] = JSON.parse(JSON.stringify(EMPTY_BOX));
 
                             y--;
-                        } while (matrice[y][j].color == matrice[y - 1][j].color);
+                        } while (y>0 && matrice[y][j].color == matrice[y - 1][j].color);
 
-                        //Last one
-                        //Un-attach the attached part
-                        switch (matrice[y][j].attached) {
-                            case RIGHT:
-                                matrice[y][j + 1].attached = -1;
-                                break;
-
-                            case TOP:
-                                matrice[y - 1][j].attached = -1;
-                                break;
-
-                            case LEFT:
-                                matrice[y][j - 1].attached = -1;
-                                break;
-
-                            case BOTTOM:
-                                matrice[y + 1][j].attached = -1;
-                                break;
+                        //Un-attach the last attached part
+                        if(y>=0){
+                            switch (matrice[y][j].attached) {
+                                case RIGHT:
+                                    matrice[y][j + 1].attached = -1;
+                                    break;
+    
+                                case TOP:
+                                    matrice[y - 1][j].attached = -1;
+                                    break;
+    
+                                case LEFT:
+                                    matrice[y][j - 1].attached = -1;
+                                    break;
+    
+                                case BOTTOM:
+                                    matrice[y + 1][j].attached = -1;
+                                    break;
+                            }
+                            //Destroy
+                            matrice[y][j] = JSON.parse(JSON.stringify(EMPTY_BOX));
+    
+                            gravityRecheck = true;    
                         }
-                        //Destroy
-                        matrice[y][j] = JSON.parse(JSON.stringify(EMPTY_BOX));
-
-                        gravityRecheck = true;
                     }
                 }
                 j++;
