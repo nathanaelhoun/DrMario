@@ -9,6 +9,12 @@
  * Class representing a medic in the game
  */
 class Medic {
+    x = -1;
+    y = -1;
+    direction = RIGHT;
+    color1 = "green";
+    color2 = "green";
+    isFalling = false;
 
     /**
      * Create a medic
@@ -261,6 +267,9 @@ class Medic {
 }
 
 class Box {
+    type = 0;
+    color = 0;
+    attached = 0;
 
     constructor() {
         var type = 0;
@@ -273,21 +282,25 @@ class Box {
 
 class drMarioGame {
 
+    fallingMedic = new Medic();
+    nextMedic = new Medic();
+    board;
+
     /**
      * @param {int} levelNumber 
      */
     constructor(levelNumber) {
-        var board = [];
-        for (var i = 0; i < BOTTLE_HEIGHT; i++) {
-            var line = [];
-            for (var j = 0; j < BOTTLE_WIDTH; j++) {
-                line[j] = new Box();
+        this.fallingMedic = new Medic();
+        this.nextMedic = new Medic();
+        this.board = new Array(BOTTLE_HEIGHT);
+        for (var lineNumber = 0; lineNumber < BOTTLE_HEIGHT; lineNumber++) {
+            this.board[lineNumber] = new Array(BOTTLE_WIDTH);
+
+            for (var columnNumber = 0; columnNumber < BOTTLE_WIDTH; columnNumber++) {
+                this.board[lineNumber][columnNumber] = new Box();
             }
-            board[i] = line;
         }
         this.fillWithRandomVirus(4 * levelNumber);
-        var fallingMedic = new Medic();
-        var nextMedic = new Medic();
     }
 
     /**
@@ -334,7 +347,7 @@ class drMarioGame {
      */
     fillWithRandomVirus(numberOfVirus) {
         var actualNumberOfVirus = 0;
-        while (actualNumberOfVirus < numberOfVirus && !isBottleFilled(matrice)) {
+        while (actualNumberOfVirus < numberOfVirus && !this.isBottleFilled()) {
             var randomLine = -1;
             var randomColumn = -1;
 
@@ -343,11 +356,11 @@ class drMarioGame {
                 randomColumn = Math.floor(Math.random() * BOTTLE_WIDTH);
             } while (
                 this.board[randomLine][randomColumn].type !== 0 &&
-                !isBottleFilled(this.board)
+                !this.isBottleFilled()
             );
 
             if (randomLine >= 0 && randomColumn >= 0) {
-                this.board[randomLine][randomColumn].color = randomColor();
+                this.board[randomLine][randomColumn].color = Medic.randomColor();
                 this.board[randomLine][randomColumn].type = VIRUS;
                 this.board[randomLine][randomColumn].attached = -1;
                 actualNumberOfVirus++;
@@ -1104,13 +1117,13 @@ function update() {
             game.board = detectColorMatching(game.board);
 
             // Detect the defeat
-            if (isDefeat()) {
+            if (game.isDefeat()) {
                 defeat = true;
 
                 // Or launch a new medicine
             } else if (!gravityRecheck) {
-                medicine = copyMedicine(nextMedicine, medicine);
-                nextMedicine = createMedicine(nextMedicine);
+                game.fallingMedic = game.nextMedic;
+                game.nextMedic = new Medic();
             }
         }
 
@@ -1131,7 +1144,7 @@ function update() {
     }
 
     //Victory ?
-    if (isVictory()) {
+    if (game.isVictory()) {
         victory = true;
     }
 }
@@ -1161,8 +1174,7 @@ function render() {
 
         context.fillStyle = "black";
         context.fillRect(473, 212, 4, 21);
-        renderMedicine(452, 212, nextMedicine.color1, nextMedicine.color2, nextMedicine.direction);
-
+        renderMedicine(452, 212, game.nextMedic.color1, game.nextMedic.color2, game.nextMedic.direction);
 
         //Drawing the bottle
         context.fillStyle = BORDERS_COLOR;
@@ -1240,8 +1252,8 @@ function render() {
                 game.fallingMedic.direction
             );
         }
-            // Victory or defeat screen
-            if(victory) {
+        // Victory or defeat screen
+        if (victory) {
             renderVictoryScreen();
             renderStartText();
         } else if (defeat) {
@@ -1270,7 +1282,7 @@ captureKeyboardPress = function (event) {
                     REFRESH_SPEED = 1000;
                 }
             }
-            moveMedicineLeft();
+            game.fallingMedic.moveMedicineLeft();
             break;
 
         //Right arrow
@@ -1282,25 +1294,26 @@ captureKeyboardPress = function (event) {
                     REFRESH_SPEED = 400;
                 }
             }
-            moveMedicineRight();
+            game.fallingMedic.moveMedicineRight();
             break;
 
         //Down arrow
         case 40:
-            moveMedicineDown();
+            game.fallingMedic.moveMedicineDown();
             break;
 
         //Space bar
         case 32:
-            rotateMedicine();
+            game.fallingMedic
+            game.fallingMedic.rotateMedicine();
             break;
 
         //Enter to play
         case 13:
             if (numLevel == 0) {
                 numLevel = 1;
-                medicine = createMedicine();
                 lastRefresh = Date.now();
+                game = new drMarioGame(numLevel);
             } else {
                 replayTheGame();
             }
